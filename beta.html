@@ -563,7 +563,7 @@
     }
     .poster-stage {
       position: relative;
-      min-height: 520px;
+      min-height: 590px;
       padding: 10px;
       border-radius: 14px;
       background:
@@ -573,7 +573,7 @@
     }
     .poster-preview {
       position: relative;
-      min-height: 440px;
+      min-height: 510px;
       overflow: hidden;
       border: 1px solid rgba(217,179,116,0.34);
       border-radius: 10px;
@@ -610,15 +610,15 @@
     .poster-main-copy {
       position: relative;
       z-index: 3;
-      padding: 10px 16px 0;
+      padding: 14px 16px 112px;
       text-shadow: 0 5px 18px rgba(0,0,0,0.6);
     }
     .poster-main-copy h1 {
       margin: 0;
-      max-width: 340px;
+      max-width: calc(100% - 112px);
       color: #fff9ea;
-      font-size: clamp(32px, 10.8vw, 56px);
-      line-height: 0.94;
+      font-size: clamp(30px, 8.8vw, 46px);
+      line-height: 0.98;
       font-weight: 950;
       letter-spacing: 0;
       text-wrap: balance;
@@ -626,7 +626,7 @@
     .poster-main-copy h1 span {
       display: inline-block;
       margin-bottom: 2px;
-      font-size: 1.2em;
+      font-size: 1.16em;
     }
     .insight-card {
       padding: 13px;
@@ -698,33 +698,46 @@
       line-height: 1.35;
     }
     .poster-time {
-      margin-top: 18px;
+      margin-top: 14px;
       color: #fff2d7;
-      font-size: clamp(56px, 19vw, 84px);
+      font-size: clamp(50px, 15.4vw, 70px);
       font-weight: 950;
       line-height: 0.9;
       letter-spacing: 0;
     }
+    .poster-distance-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 10px;
+      padding: 5px 9px;
+      border: 1px solid rgba(243,106,23,0.28);
+      border-radius: 999px;
+      color: #ff9b45;
+      background: rgba(16,20,17,0.64);
+      font-size: 12px;
+      font-weight: 900;
+    }
     .poster-subline {
       margin-top: 14px;
-      max-width: calc(100% - 104px);
+      max-width: calc(100% - 112px);
       color: #fff7df;
-      font-size: 20px;
+      font-size: 19px;
       font-weight: 900;
       line-height: 1.25;
     }
     .poster-foot {
       margin-top: 8px;
-      max-width: calc(100% - 104px);
+      max-width: calc(100% - 112px);
       color: #ffe5c6;
       font-size: 14px;
-      line-height: 1.55;
+      line-height: 1.48;
     }
     .poster-stamp {
       position: absolute;
-      right: 18px;
-      top: 126px;
-      z-index: 2;
+      right: 24px;
+      top: 58px;
+      z-index: 4;
       display: grid;
       place-items: center;
       width: 74px;
@@ -741,12 +754,12 @@
     }
     .poster-route {
       position: absolute;
-      right: 12px;
-      top: 54px;
+      right: 24px;
+      top: 132px;
       z-index: 1;
-      width: 138px;
-      height: 110px;
-      opacity: 0.88;
+      width: 164px;
+      height: 126px;
+      opacity: 0.82;
     }
     .poster-route path {
       fill: none;
@@ -757,17 +770,17 @@
     }
     .poster-route-art {
       position: absolute;
-      right: -26px;
-      top: 46px;
+      right: -18px;
+      top: 118px;
       z-index: 1;
-      width: 198px;
-      height: 150px;
+      width: 224px;
+      height: 166px;
       overflow: hidden;
       border: 1px solid rgba(217,179,116,0.24);
       border-radius: 12px;
       background: rgba(243,106,23,0.12);
       box-shadow: 0 18px 38px rgba(0,0,0,0.32);
-      opacity: 0.58;
+      opacity: 0.52;
       transform: rotate(-4deg);
       pointer-events: none;
       -webkit-mask-image: linear-gradient(115deg, transparent 0%, #000 20%, #000 78%, transparent 100%);
@@ -792,7 +805,7 @@
     .poster-medal-large {
       position: absolute;
       right: 18px;
-      bottom: 88px;
+      bottom: 112px;
       z-index: 2;
       width: 92px;
       height: 92px;
@@ -806,15 +819,26 @@
     .poster-medal-photo {
       position: absolute;
       right: 18px;
-      bottom: 88px;
+      bottom: 112px;
       z-index: 2;
       width: 92px;
       height: 92px;
-      object-fit: cover;
+      display: grid;
+      place-items: center;
+      padding: 7px;
       border: 3px solid rgba(255,232,184,0.64);
       border-radius: 999px;
-      box-shadow: inset 0 0 0 8px rgba(122,84,43,0.2), 0 12px 24px rgba(0,0,0,0.35);
-      filter: saturate(0.92) contrast(1.04);
+      background:
+        radial-gradient(circle at 32% 24%, rgba(255,241,197,0.68), transparent 24%),
+        linear-gradient(135deg, rgba(122,84,43,0.96), rgba(214,165,83,0.9) 48%, rgba(61,43,24,0.96));
+      box-shadow: inset 0 0 0 7px rgba(0,0,0,0.14), 0 12px 24px rgba(0,0,0,0.35);
+    }
+    .poster-medal-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 999px;
+      filter: saturate(0.96) contrast(1.04);
     }
     .poster-template-row {
       position: absolute;
@@ -1694,6 +1718,32 @@
       });
     }
 
+    function imageFromDataUrl(dataUrl) {
+      return new Promise((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error("image_decode_failed"));
+        image.src = dataUrl;
+      });
+    }
+
+    async function compressImageForAsset(file, type) {
+      const original = await fileToDataUrl(file);
+      const image = await imageFromDataUrl(original);
+      const maxSide = type === "medalImage" ? 920 : 1400;
+      const quality = type === "medalImage" ? 0.86 : 0.78;
+      const width = image.naturalWidth || image.width;
+      const height = image.naturalHeight || image.height;
+      const scale = Math.min(1, maxSide / Math.max(width, height));
+      if (scale >= 1 && file.size <= 1200 * 1024) return original;
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, Math.round(width * scale));
+      canvas.height = Math.max(1, Math.round(height * scale));
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      return canvas.toDataURL("image/jpeg", quality);
+    }
+
     async function readResultAssets(form) {
       const result = {};
       const fields = [...form.querySelectorAll("[data-asset-file]")];
@@ -1702,9 +1752,15 @@
         if (!file) continue;
         const type = input.dataset.assetType;
         const asset = { name: file.name, type: file.type || "image/*" };
-        if (file.type?.startsWith("image/") && file.size <= 1500 * 1024) {
-          asset.dataUrl = await fileToDataUrl(file);
-        } else if (file.size > 1500 * 1024) {
+        if (file.type?.startsWith("image/") && file.size <= 8 * 1024 * 1024) {
+          try {
+            asset.dataUrl = await compressImageForAsset(file, type);
+            asset.compressed = true;
+          } catch {
+            if (file.size <= 1500 * 1024) asset.dataUrl = await fileToDataUrl(file);
+          }
+        }
+        if (!asset.dataUrl && file.size > 8 * 1024 * 1024) {
           asset.note = "图片较大，已先记录文件名";
         }
         result[type] = asset;
@@ -2303,6 +2359,7 @@
       const copy = posterCopyFor(result, user, goal);
       const year = result.date.slice(0, 4);
       const eventTitle = posterEventTitle(result, event);
+      const distanceLabel = result.distance === "半马" ? "半马成绩" : "全马成绩";
       const assets = result.assets || {};
       return `
         <div class="stack">
@@ -2323,12 +2380,17 @@
                 `}
                 <div class="poster-main-copy">
                   <h1><span>${safe(year)}</span><br>${safe(eventTitle)}</h1>
+                  <div class="poster-distance-badge">${safe(distanceLabel)}${result.pace ? ` · ${safe(result.pace)}` : ""}</div>
                   <div class="poster-time">${safe(result.time)}</div>
                   <div class="poster-subline">${safe(copy.title)} · ${safe(result.level)}</div>
                   <p class="poster-foot">${safe(copy.line)}<br>${safe(copy.styleLine)}<br>${safe(copy.foot)}</p>
                 </div>
                 <div class="poster-stamp">${safe(event.city || result.city)}<br>${safe(year)}</div>
-                ${assets.medalImage?.dataUrl ? `<img class="poster-medal-photo" src="${safe(assets.medalImage.dataUrl)}" alt="完赛奖牌">` : `<div class="poster-medal-large" aria-hidden="true"></div>`}
+                ${assets.medalImage?.dataUrl ? `
+                  <div class="poster-medal-photo">
+                    <img src="${safe(assets.medalImage.dataUrl)}" alt="完赛奖牌">
+                  </div>
+                ` : `<div class="poster-medal-large" aria-hidden="true"></div>`}
                 <div class="poster-template-row">
                   ${runnerGoals.map(goalItem => `
                     <button class="poster-template ${goal.id === goalItem.id ? "is-active" : ""}" type="button" data-poster-mode="${goalItem.id}">

@@ -67,6 +67,8 @@ assert(!html.includes('url("assets/memorial-ui-06-poster-maker.jpg")'), "poster 
 assert(html.includes("function posterEventTitle"), "poster title must use the recorded race name instead of city-only naming");
 assert(!html.includes("${safe(result.city)}马拉松"), "poster must not rewrite special races like 湘江半程马拉松 into city + 马拉松");
 assert(html.includes("poster-route-art"), "uploaded route maps should be treated as poster art rather than pasted raw screenshots");
+assert(html.includes("poster-distance-badge"), "poster must label full marathon versus half marathon results");
+assert(html.includes("function compressImageForAsset"), "uploaded poster assets should be compressed and retained for poster rendering");
 assert(!html.includes("poster-asset-row"), "poster should not show collected-asset badges that collide with copy");
 assert(html.includes("18 + Math.min(city.count, 6) * 2"), "map city markers must be smaller on mobile");
 
@@ -227,7 +229,9 @@ assert(xiangmaParsed.rank === "8537", "overall ranking must prefer net-time over
 const xiangmaPoster = renderXiangmaPosterSample();
 assert(xiangmaPoster.includes("湘江半程马拉松"), "Xiangjiang poster must show the actual race name");
 assert(!xiangmaPoster.includes("长沙马拉松"), "Xiangjiang poster must not be renamed to Changsha Marathon");
+assert(xiangmaPoster.includes("半马成绩"), "Xiangjiang half poster must explicitly label the result as half marathon");
 assert(xiangmaPoster.includes("poster-route-art"), "route upload must render through the stylized poster art layer");
+assert(xiangmaPoster.includes("data:image/jpeg;base64,MEDAL"), "medal upload must be used in the poster instead of the default medal");
 assert(!xiangmaPoster.includes("路线图已收录") && !xiangmaPoster.includes("奖牌已收录"), "poster must not print collected asset badges over the design");
 
 console.log("OCR regression checks passed");

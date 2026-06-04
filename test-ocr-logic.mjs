@@ -4,6 +4,9 @@ import { dirname, join } from "node:path";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const html = readFileSync(join(root, "beta.html"), "utf8");
+const browserScript = html
+  .match(/<script>\n([\s\S]*)\n  <\/script>\n<\/body>/)[1]
+  .replace(/\n\s*bootstrap\(\);\s*$/, "");
 
 function assert(condition, message) {
   if (!condition) {
@@ -61,12 +64,13 @@ assert(html.includes("runnerStyles"), "runner style options must be available");
 assert(html.includes('name="runnerStyle"'), "runner style must be collected in profile forms");
 assert(html.includes("佛系跑者") && html.includes("严肃竞速") && html.includes("赛道香风"), "runner styles must include share-friendly presets");
 assert(!html.includes('url("assets/memorial-ui-06-poster-maker.jpg")'), "poster output must not use sample screenshot as background");
+assert(html.includes("function posterEventTitle"), "poster title must use the recorded race name instead of city-only naming");
+assert(!html.includes("${safe(result.city)}马拉松"), "poster must not rewrite special races like 湘江半程马拉松 into city + 马拉松");
+assert(html.includes("poster-route-art"), "uploaded route maps should be treated as poster art rather than pasted raw screenshots");
+assert(!html.includes("poster-asset-row"), "poster should not show collected-asset badges that collide with copy");
 assert(html.includes("18 + Math.min(city.count, 6) * 2"), "map city markers must be smaller on mobile");
 
 function runParser(sampleText, fileName) {
-  const script = html
-    .match(/<script>\n([\s\S]*)\n  <\/script>\n<\/body>/)[1]
-    .replace(/\n\s*bootstrap\(\);\s*$/, "");
   const stubElement = {
     addEventListener() {},
     classList: { toggle() {}, add() {}, remove() {} },
@@ -110,7 +114,95 @@ function runParser(sampleText, fileName) {
     Error,
     encodeURIComponent
   };
-  return Function("sandbox", "sampleText", "fileName", `with (sandbox) { ${script}; db = normalizeBetaState(generateSeed()); return parseOcrResult(sampleText, fileName); }`)(sandbox, sampleText, fileName);
+  return Function("sandbox", "sampleText", "fileName", `with (sandbox) { ${browserScript}; db = normalizeBetaState(generateSeed()); return parseOcrResult(sampleText, fileName); }`)(sandbox, sampleText, fileName);
+}
+
+function renderXiangmaPosterSample() {
+  const stubElement = {
+    addEventListener() {},
+    classList: { toggle() {}, add() {}, remove() {} },
+    style: {},
+    hidden: false,
+    textContent: "",
+    innerHTML: "",
+    scrollTop: 0
+  };
+  const sandbox = {
+    document: {
+      querySelector() { return stubElement; },
+      addEventListener() {}
+    },
+    window: {
+      addEventListener() {},
+      dispatchEvent() {},
+      clearTimeout() {},
+      setTimeout() {},
+      matchMedia() { return { matches: false }; }
+    },
+    localStorage: {
+      getItem() { return null; },
+      setItem() {},
+      removeItem() {}
+    },
+    navigator: { clipboard: { writeText() {} } },
+    fetch() { throw new Error("fetch disabled in poster test"); },
+    console,
+    Date,
+    Math,
+    JSON,
+    Set,
+    Map,
+    RegExp,
+    String,
+    Number,
+    Boolean,
+    Array,
+    Object,
+    Error,
+    encodeURIComponent
+  };
+  return Function("sandbox", `with (sandbox) {
+    ${browserScript};
+    db = normalizeBetaState({
+      version: 2,
+      users: [{
+        id: "user_xiangma",
+        nickname: "疯神菜腿",
+        runnerGoal: "pb",
+        runnerStyle: "zen",
+        publicProfile: true
+      }],
+      results: [{
+        id: "result_xiangma",
+        userId: "user_xiangma",
+        eventId: "xiangjiang-half-2026",
+        eventName: "湘江半程马拉松",
+        city: "长沙",
+        date: "2026-04-26",
+        distance: "半马",
+        seconds: 8216,
+        time: "2:16:56",
+        pace: "6:29/km",
+        rank: "8537 / 15000",
+        genderRank: "6945",
+        ageRank: "",
+        level: "待补充档案",
+        official: true,
+        pb: false,
+        medal: "gold",
+        assets: {
+          routeImage: { name: "route.jpg", dataUrl: "data:image/jpeg;base64,ROUTE" },
+          medalImage: { name: "medal.jpg", dataUrl: "data:image/jpeg;base64,MEDAL" }
+        }
+      }],
+      posts: [],
+      feedback: [],
+      deletedResultIds: []
+    });
+    state.currentUserId = "user_xiangma";
+    state.selectedResultId = "result_xiangma";
+    return renderPoster();
+  }`)(sandbox);
 }
 
 const xiangmaCertificateText = `
@@ -131,5 +223,11 @@ assert(xiangmaParsed.event?.id === "xiangjiang-half-2026", "Xiangjiang certifica
 assert(xiangmaParsed.time === "2:16:56", "certificate parser must prefer net time over gun time");
 assert(xiangmaParsed.genderRank === "6945", "gender ranking must prefer net-time gender place");
 assert(xiangmaParsed.rank === "8537", "overall ranking must prefer net-time overall place");
+
+const xiangmaPoster = renderXiangmaPosterSample();
+assert(xiangmaPoster.includes("湘江半程马拉松"), "Xiangjiang poster must show the actual race name");
+assert(!xiangmaPoster.includes("长沙马拉松"), "Xiangjiang poster must not be renamed to Changsha Marathon");
+assert(xiangmaPoster.includes("poster-route-art"), "route upload must render through the stylized poster art layer");
+assert(!xiangmaPoster.includes("路线图已收录") && !xiangmaPoster.includes("奖牌已收录"), "poster must not print collected asset badges over the design");
 
 console.log("OCR regression checks passed");

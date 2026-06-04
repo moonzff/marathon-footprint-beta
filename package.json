@@ -1,0 +1,11 @@
+{
+  "name": "marathon-footprint-beta",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node test-ocr-logic.mjs"
+  },
+  "dependencies": {
+    "@netlify/blobs": "latest"
+  }
+}

@@ -1,0 +1,2839 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>跑马纪念册内测版</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050706;
+      --panel: #0d1210;
+      --panel-2: #131a16;
+      --panel-3: #1a231f;
+      --text: #f6f1e8;
+      --muted: #9fa9a2;
+      --weak: #707970;
+      --line: rgba(255, 255, 255, 0.09);
+      --orange: #f36a17;
+      --orange-2: #ff8b35;
+      --gold: #d9b374;
+      --blue: #4b95ff;
+      --green: #35c875;
+      --red: #e85a4f;
+      --radius: 8px;
+      --shadow: 0 20px 70px rgba(0, 0, 0, 0.45);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; min-height: 100%; margin: 0; }
+    body {
+      background:
+        radial-gradient(circle at 12% 0%, rgba(243, 106, 23, 0.18), transparent 25rem),
+        radial-gradient(circle at 96% 12%, rgba(75, 149, 255, 0.12), transparent 24rem),
+        #020302;
+      color: var(--text);
+      overflow: hidden;
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
+    button, input, select, textarea { font: inherit; }
+    button {
+      border: 0;
+      color: inherit;
+      background: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+    input, select, textarea {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.045);
+      outline: none;
+    }
+    input, select { height: 44px; padding: 0 12px; }
+    textarea { min-height: 92px; padding: 12px; resize: vertical; }
+    select option { color: #101410; background: #f8f2e8; }
+    .app {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      height: 100svh;
+      height: 100dvh;
+      min-height: 100svh;
+      width: min(100%, 430px);
+      margin: 0 auto;
+      overflow: hidden;
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), transparent 240px), var(--bg);
+      box-shadow: var(--shadow);
+    }
+    @media (min-width: 700px) {
+      body { padding: 18px 0; }
+      .app {
+        height: calc(100dvh - 36px);
+        min-height: calc(100svh - 36px);
+        border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 24px;
+      }
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      min-height: calc(54px + env(safe-area-inset-top));
+      padding: env(safe-area-inset-top) 10px 0;
+      background: rgba(5, 7, 6, 0.84);
+      border-bottom: 1px solid transparent;
+      backdrop-filter: blur(18px);
+    }
+    .topbar.is-raised { border-bottom-color: var(--line); }
+    .titlebox { min-width: 0; text-align: center; line-height: 1.22; }
+    .titlebox b {
+      display: block;
+      overflow: hidden;
+      font-size: 16px;
+      font-weight: 850;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .titlebox span {
+      display: block;
+      margin-top: 2px;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .icon-btn {
+      display: inline-grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+    }
+    .icon-btn:active { background: rgba(255,255,255,0.08); }
+    .back-btn[hidden] {
+      display: inline-grid;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .screen {
+      flex: 1;
+      min-height: 0;
+      padding: 14px 14px calc(130px + env(safe-area-inset-bottom));
+      overflow-x: hidden;
+      overflow-y: auto;
+      overscroll-behavior-y: contain;
+      -webkit-overflow-scrolling: touch;
+    }
+    .tabbar {
+      position: fixed;
+      right: max(0px, calc((100vw - 430px) / 2));
+      bottom: 0;
+      left: max(0px, calc((100vw - 430px) / 2));
+      z-index: 30;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2px;
+      width: min(100%, 430px);
+      margin: 0 auto;
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(9, 12, 11, 0.94);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(20px);
+    }
+    .tabbar button {
+      display: grid;
+      justify-items: center;
+      gap: 4px;
+      min-width: 0;
+      padding: 6px 2px 4px;
+      border-radius: var(--radius);
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+    .tabbar button::before {
+      content: "";
+      width: 20px;
+      height: 20px;
+      border: 2px solid currentColor;
+      border-radius: 7px;
+      opacity: 0.74;
+    }
+    .tabbar button[data-tab="map"]::before { border-radius: 999px; }
+    .tabbar button[data-tab="archive"]::before {
+      width: 18px;
+      border-radius: 4px;
+      box-shadow: inset 0 5px 0 rgba(255,255,255,0.16);
+    }
+    .tabbar button[data-tab="community"]::before { border-radius: 999px 999px 999px 4px; }
+    .tabbar button[data-tab="profile"]::before { width: 18px; border-radius: 999px 999px 7px 7px; }
+    .tabbar button.is-active { color: var(--orange); background: rgba(243,106,23,0.1); }
+    .stack { display: grid; gap: 12px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(255,255,255,0.055), rgba(255,255,255,0.025)), var(--panel);
+      box-shadow: 0 12px 34px rgba(0,0,0,0.18);
+    }
+    .hero-card {
+      position: relative;
+      min-height: 188px;
+      padding: 16px;
+      overflow: hidden;
+      background:
+        linear-gradient(90deg, rgba(5,7,6,0.92), rgba(5,7,6,0.34)),
+        url("assets/memorial-ui-01-passport-home.jpg") center 16% / 270% auto;
+    }
+    .hero-card::after {
+      content: "BETA";
+      position: absolute;
+      right: 16px;
+      top: 15px;
+      display: grid;
+      place-items: center;
+      width: 58px;
+      height: 58px;
+      border: 1px solid rgba(217,179,116,0.5);
+      border-radius: 999px;
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 900;
+      transform: rotate(-14deg);
+    }
+    .runner-head { display: flex; gap: 12px; align-items: center; }
+    .avatar {
+      display: grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 58px;
+      height: 58px;
+      border: 2px solid rgba(255,255,255,0.18);
+      border-radius: 999px;
+      background: linear-gradient(135deg, #2b3530, #151b18);
+      color: var(--gold);
+      font-weight: 900;
+    }
+    .runner-head h1, .public-card h1 { margin: 0; font-size: 23px; line-height: 1.14; letter-spacing: 0; }
+    .tag-row, .runner-meta { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 0 8px;
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.045);
+      font-size: 11px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+    .tag.orange { color: #ffd7be; background: rgba(243,106,23,0.18); border-color: rgba(243,106,23,0.32); }
+    .tag.blue { color: #cfe2ff; background: rgba(75,149,255,0.16); border-color: rgba(75,149,255,0.28); }
+    .tag.green { color: #d5ffe4; background: rgba(53,200,117,0.16); border-color: rgba(53,200,117,0.28); }
+    .tag.gold { color: #ffe6bd; background: rgba(217,179,116,0.15); border-color: rgba(217,179,116,0.25); }
+    .passport-stats, .stat-strip, .public-meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      margin-top: 16px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+    .passport-stats div, .stat-strip div, .public-meta div {
+      min-width: 0;
+      padding: 12px 6px;
+      background: rgba(7,10,8,0.78);
+      text-align: center;
+    }
+    .passport-stats b, .stat-strip b, .public-meta b {
+      display: block;
+      overflow: hidden;
+      color: #ffe1b9;
+      font-size: 20px;
+      font-weight: 850;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .passport-stats span, .stat-strip span, .public-meta span {
+      display: block;
+      margin-top: 4px;
+      color: var(--muted);
+      font-size: 10px;
+      white-space: nowrap;
+    }
+    .grid-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .metric-card {
+      min-height: 104px;
+      padding: 13px;
+      text-align: left;
+    }
+    .metric-card span, .muted { color: var(--muted); }
+    .metric-card b {
+      display: block;
+      margin-top: 8px;
+      color: var(--orange-2);
+      font-size: 28px;
+      line-height: 1;
+    }
+    .metric-card small { display: block; margin-top: 8px; color: var(--muted); }
+    .primary-actions, .button-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .solid-btn, .ghost-btn, .action-btn, .danger-btn {
+      display: inline-grid;
+      place-items: center;
+      min-height: 46px;
+      padding: 0 14px;
+      border-radius: var(--radius);
+      font-weight: 850;
+    }
+    .solid-btn, .action-btn {
+      background: linear-gradient(180deg, var(--orange-2), var(--orange));
+      color: #fff7ef;
+      box-shadow: 0 12px 26px rgba(243,106,23,0.24);
+    }
+    .ghost-btn {
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.045);
+      color: var(--text);
+    }
+    .danger-btn {
+      border: 1px solid rgba(232,90,79,0.36);
+      background: rgba(232,90,79,0.12);
+      color: #ffd4cf;
+    }
+    .section-title, .year-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 12px;
+      margin-top: 4px;
+    }
+    .section-title h2, .year-head b { margin: 0; font-size: 18px; line-height: 1.15; }
+    .section-title span, .year-head span { color: var(--muted); font-size: 12px; white-space: nowrap; }
+    .race-row, .feed-card, .form-card, .admin-card, .public-card, .poster-card, .memory-card {
+      padding: 13px;
+    }
+    .race-row {
+      display: grid;
+      grid-template-columns: 54px 1fr auto;
+      gap: 12px;
+      align-items: center;
+      width: 100%;
+      text-align: left;
+    }
+    .race-row h3, .feed-card p { margin: 0; font-size: 15px; line-height: 1.35; }
+    .race-row p { margin: 5px 0 0; color: var(--muted); font-size: 12px; }
+    .race-time { margin-top: 8px; color: var(--orange-2); font-size: 22px; font-weight: 900; letter-spacing: 0; }
+    .medal {
+      width: 48px;
+      height: 48px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 32% 24%, #fff1c5, transparent 23%),
+        linear-gradient(135deg, #7a542b, #d6a553 46%, #775026);
+      border: 2px solid rgba(255,232,184,0.42);
+      box-shadow: inset 0 0 0 5px rgba(0,0,0,0.15), 0 8px 18px rgba(0,0,0,0.28);
+    }
+    .medal.silver { filter: grayscale(0.75) brightness(1.2); }
+    .row-action { color: var(--weak); font-size: 28px; }
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 10px;
+      align-items: center;
+    }
+    .search {
+      display: flex;
+      align-items: center;
+      height: 42px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: rgba(255,255,255,0.045);
+      font-size: 13px;
+    }
+    .chips, .feed-tabs {
+      display: flex;
+      gap: 8px;
+      overflow: auto;
+      padding-bottom: 1px;
+      scrollbar-width: none;
+    }
+    .chips::-webkit-scrollbar, .feed-tabs::-webkit-scrollbar { display: none; }
+    .chip, .feed-tabs button {
+      flex: 0 0 auto;
+      min-height: 34px;
+      padding: 0 13px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255,255,255,0.045);
+      font-size: 12px;
+      font-weight: 750;
+    }
+    .chip.is-active, .feed-tabs button.is-active {
+      color: #fff4eb;
+      border-color: rgba(243,106,23,0.35);
+      background: rgba(243,106,23,0.2);
+    }
+    .map-card { position: relative; overflow: hidden; padding: 0; }
+    .interactive-map {
+      width: 100%;
+      height: min(68vh, 430px);
+      min-height: 360px;
+      background: #0a1210;
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .leaflet-container { background: #0a1210; font: inherit; }
+    .map-legend {
+      position: absolute;
+      left: 10px;
+      bottom: 10px;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      max-width: calc(100% - 20px);
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(5,7,6,0.78);
+      backdrop-filter: blur(12px);
+    }
+    .map-legend span { display: inline-flex; align-items: center; gap: 5px; color: var(--muted); font-size: 10px; }
+    .legend-dot {
+      width: 9px;
+      height: 9px;
+      border-radius: 999px;
+      background: var(--dot);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--dot), transparent 76%);
+    }
+    .footprint-marker {
+      position: relative;
+      width: var(--marker-size);
+      height: var(--marker-size);
+      border-radius: 999px;
+      background: color-mix(in srgb, var(--marker-color), transparent 20%);
+      border: 2px solid rgba(255,255,255,0.86);
+      box-shadow: 0 0 0 4px color-mix(in srgb, var(--marker-color), transparent 76%), 0 8px 16px rgba(0,0,0,0.34);
+    }
+    .footprint-marker.is-muted { opacity: 0.26; filter: grayscale(0.5); }
+    .marker-label {
+      position: absolute;
+      left: 50%;
+      bottom: calc(100% + 6px);
+      transform: translateX(-50%);
+      padding: 2px 5px;
+      border-radius: 5px;
+      color: #fff;
+      background: rgba(0,0,0,0.58);
+      font-size: 10px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+    .map-fallback {
+      display: grid;
+      place-items: center;
+      min-height: 360px;
+      padding: 20px;
+      color: var(--muted);
+      text-align: center;
+    }
+    .form-grid { display: grid; gap: 10px; }
+    .field { display: grid; gap: 6px; }
+    .field label { color: var(--muted); font-size: 12px; font-weight: 750; }
+    .field small { color: var(--weak); font-size: 11px; line-height: 1.45; }
+    .score-upload {
+      padding: 12px;
+      border: 1px solid rgba(217,179,116,0.24);
+      border-radius: var(--radius);
+      background: linear-gradient(180deg, rgba(217,179,116,0.1), rgba(255,255,255,0.035));
+    }
+    .score-upload label {
+      color: #ffe3bf;
+      font-size: 14px;
+    }
+    .form-section {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding-top: 4px;
+      color: #ffe3bf;
+      font-size: 13px;
+      font-weight: 850;
+    }
+    .form-section span {
+      color: var(--weak);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .ocr-status {
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: rgba(255,255,255,0.04);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+    .ocr-status[data-status="reading"] { color: #ffe6bd; border-color: rgba(217,179,116,0.36); background: rgba(217,179,116,0.1); }
+    .ocr-status[data-status="verified"] { color: #d5ffe4; border-color: rgba(53,200,117,0.34); background: rgba(53,200,117,0.1); }
+    .ocr-status[data-status="partial"] { color: #cfe2ff; border-color: rgba(75,149,255,0.34); background: rgba(75,149,255,0.1); }
+    .ocr-status[data-status="failed"] { color: #ffd7d2; border-color: rgba(232,90,79,0.36); background: rgba(232,90,79,0.1); }
+    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .feed-head {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      gap: 9px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .mini-avatar {
+      display: grid;
+      place-items: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #26322e, #121715);
+      color: var(--gold);
+      font-size: 12px;
+      font-weight: 900;
+    }
+    .feed-head b { display: block; font-size: 13px; }
+    .feed-head span { display: block; margin-top: 2px; color: var(--muted); font-size: 11px; }
+    .feed-actions {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    .composer {
+      position: sticky;
+      bottom: 82px;
+      display: grid;
+      grid-template-columns: 1fr 64px;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(9,12,11,0.92);
+      backdrop-filter: blur(18px);
+    }
+    .composer input { height: 40px; }
+    .composer button {
+      border-radius: var(--radius);
+      background: var(--orange);
+      color: white;
+      font-weight: 850;
+    }
+    .public-card {
+      color: #2a2117;
+      background:
+        linear-gradient(180deg, rgba(255,249,239,0.94), rgba(232,214,187,0.94)),
+        url("assets/memorial-ui-08-public-profile.jpg") center / cover;
+    }
+    .public-card .muted, .public-card .public-meta span { color: #766856; }
+    .public-card .public-meta { background: rgba(70,50,24,0.16); border-color: rgba(70,50,24,0.16); }
+    .public-card .public-meta div { background: rgba(255,255,255,0.52); }
+    .public-card .public-meta b { color: #a3470e; }
+    .poster-card {
+      padding: 12px;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at 12% 8%, rgba(243,106,23,0.2), transparent 12rem),
+        linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
+        #070908;
+    }
+    .poster-stage {
+      position: relative;
+      min-height: 520px;
+      padding: 10px;
+      border-radius: 14px;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.1), transparent 14%, transparent 86%, rgba(255,255,255,0.08)),
+        #020302;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 22px 48px rgba(0,0,0,0.4);
+    }
+    .poster-preview {
+      position: relative;
+      min-height: 440px;
+      overflow: hidden;
+      border: 1px solid rgba(217,179,116,0.34);
+      border-radius: 10px;
+      background:
+        radial-gradient(circle at 78% 22%, rgba(243,106,23,0.28), transparent 9rem),
+        radial-gradient(circle at 22% 68%, rgba(217,179,116,0.16), transparent 11rem),
+        linear-gradient(180deg, rgba(17,23,20,0.88), rgba(2,3,2,0.96)),
+        #050706;
+    }
+    .poster-preview::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(255,255,255,0.16), transparent 1px) 0 0 / 52px 100%,
+        linear-gradient(180deg, transparent 72%, rgba(0,0,0,0.72));
+      mix-blend-mode: screen;
+      opacity: 0.12;
+      pointer-events: none;
+    }
+    .poster-kicker {
+      position: relative;
+      z-index: 2;
+      display: inline-flex;
+      margin: 14px 0 0 16px;
+      padding: 5px 9px;
+      border: 1px solid rgba(255,255,255,0.13);
+      border-radius: 999px;
+      color: #ffe8c8;
+      background: rgba(0,0,0,0.34);
+      font-size: 11px;
+      font-weight: 850;
+    }
+    .poster-main-copy {
+      position: relative;
+      z-index: 2;
+      padding: 10px 16px 0;
+      text-shadow: 0 5px 18px rgba(0,0,0,0.6);
+    }
+    .poster-main-copy h1 {
+      margin: 0;
+      color: #fff9ea;
+      font-size: clamp(34px, 12vw, 58px);
+      line-height: 0.92;
+      font-weight: 950;
+      letter-spacing: 0;
+    }
+    .insight-card {
+      padding: 13px;
+      border-left: 3px solid var(--orange);
+    }
+    .insight-card b {
+      display: block;
+      margin-bottom: 6px;
+      color: #ffe2bd;
+      font-size: 14px;
+    }
+    .insight-card p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+    .asset-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .asset-upload-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+    .asset-upload {
+      min-width: 0;
+      padding: 9px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255,255,255,0.035);
+    }
+    .asset-upload label {
+      display: block;
+      margin-bottom: 6px;
+      color: #ffe3bf;
+      font-size: 12px;
+      font-weight: 850;
+    }
+    .asset-upload input {
+      height: 38px;
+      padding: 7px;
+      font-size: 11px;
+    }
+    .asset-upload small {
+      display: block;
+      margin-top: 5px;
+      color: var(--weak);
+      font-size: 10px;
+      line-height: 1.35;
+    }
+    .event-asset {
+      min-height: 74px;
+      padding: 9px 6px;
+      text-align: center;
+    }
+    .event-asset b {
+      display: block;
+      color: #ffe3bf;
+      font-size: 12px;
+    }
+    .event-asset span {
+      display: block;
+      margin-top: 8px;
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.35;
+    }
+    .poster-time {
+      margin-top: 18px;
+      color: #fff2d7;
+      font-size: clamp(56px, 19vw, 84px);
+      font-weight: 950;
+      line-height: 0.9;
+      letter-spacing: 0;
+    }
+    .poster-subline {
+      margin-top: 14px;
+      color: #fff7df;
+      font-size: 20px;
+      font-weight: 900;
+      line-height: 1.25;
+    }
+    .poster-foot {
+      margin-top: 8px;
+      color: #ffe5c6;
+      font-size: 14px;
+      line-height: 1.55;
+    }
+    .poster-stamp {
+      position: absolute;
+      right: 18px;
+      top: 126px;
+      z-index: 2;
+      display: grid;
+      place-items: center;
+      width: 74px;
+      height: 74px;
+      border: 2px solid rgba(243,106,23,0.66);
+      border-radius: 999px;
+      color: #ff8b35;
+      background: rgba(5,7,6,0.46);
+      font-size: 13px;
+      font-weight: 950;
+      text-align: center;
+      line-height: 1.12;
+      transform: rotate(-10deg);
+    }
+    .poster-route {
+      position: absolute;
+      right: 12px;
+      top: 54px;
+      z-index: 1;
+      width: 138px;
+      height: 110px;
+      opacity: 0.88;
+    }
+    .poster-route path {
+      fill: none;
+      stroke: var(--orange-2);
+      stroke-width: 4;
+      stroke-linecap: round;
+      stroke-dasharray: 6 8;
+    }
+    .poster-route-photo {
+      position: absolute;
+      right: 12px;
+      top: 54px;
+      z-index: 1;
+      width: 138px;
+      height: 110px;
+      object-fit: cover;
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: var(--radius);
+      opacity: 0.9;
+    }
+    .poster-medal-large {
+      position: absolute;
+      right: 18px;
+      bottom: 88px;
+      z-index: 2;
+      width: 92px;
+      height: 92px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 32% 24%, #fff1c5, transparent 23%),
+        linear-gradient(135deg, #7a542b, #d6a553 46%, #775026);
+      border: 2px solid rgba(255,232,184,0.5);
+      box-shadow: inset 0 0 0 9px rgba(0,0,0,0.16), 0 12px 24px rgba(0,0,0,0.35);
+    }
+    .poster-medal-photo {
+      position: absolute;
+      right: 18px;
+      bottom: 88px;
+      z-index: 2;
+      width: 92px;
+      height: 92px;
+      object-fit: cover;
+      border: 2px solid rgba(255,232,184,0.5);
+      border-radius: 999px;
+      box-shadow: 0 12px 24px rgba(0,0,0,0.35);
+    }
+    .poster-asset-row {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 64px;
+      z-index: 2;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .poster-asset-row span {
+      padding: 5px 7px;
+      border: 1px solid rgba(255,255,255,0.14);
+      border-radius: 999px;
+      color: #ffe8c8;
+      background: rgba(0,0,0,0.34);
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .poster-template-row {
+      position: absolute;
+      left: 10px;
+      right: 10px;
+      bottom: 14px;
+      z-index: 3;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+    }
+    .poster-template {
+      min-height: 58px;
+      padding: 8px 5px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      color: var(--muted);
+      background: rgba(6,8,7,0.74);
+      font-size: 10px;
+      font-weight: 850;
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+    .poster-template.is-active {
+      color: #ffe6c8;
+      border-color: rgba(243,106,23,0.5);
+      background: rgba(243,106,23,0.18);
+    }
+    .admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+    .admin-card b { display: block; color: var(--orange-2); font-size: 24px; }
+    .admin-card span { display: block; margin-top: 4px; color: var(--muted); font-size: 12px; }
+    .empty {
+      padding: 18px;
+      border: 1px dashed rgba(255,255,255,0.16);
+      border-radius: var(--radius);
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.55;
+    }
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: calc(88px + env(safe-area-inset-bottom));
+      left: 18px;
+      z-index: 80;
+      max-width: 390px;
+      margin: 0 auto;
+      padding: 12px 14px;
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      color: #fff;
+      background: rgba(18,24,21,0.95);
+      text-align: center;
+      box-shadow: 0 16px 38px rgba(0,0,0,0.32);
+      opacity: 0;
+      transform: translateY(14px);
+      pointer-events: none;
+      transition: 0.18s ease;
+    }
+    .toast.is-visible { opacity: 1; transform: translateY(0); }
+    .loading {
+      display: grid;
+      place-items: center;
+      min-height: 62vh;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.7;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar" id="topbar">
+      <button class="icon-btn back-btn" id="backBtn" type="button" aria-label="返回" hidden>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="m15 18-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <div class="titlebox">
+        <b id="appTitle">跑马纪念册</b>
+        <span id="appSubtitle">正在准备内测数据</span>
+      </div>
+      <button class="icon-btn" type="button" data-action="quick-feedback" aria-label="反馈">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M5 5h14v10H8l-3 3V5Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+    </header>
+    <main class="screen" id="screen" tabindex="-1">
+      <div class="loading">正在加载内测版<br>首次打开会生成一批虚拟跑友数据</div>
+    </main>
+    <nav class="tabbar" aria-label="主导航" id="tabbar">
+      <button type="button" data-tab="passport">护照</button>
+      <button type="button" data-tab="map">足迹</button>
+      <button type="button" data-tab="archive">档案</button>
+      <button type="button" data-tab="community">社区</button>
+      <button type="button" data-tab="profile">我的</button>
+    </nav>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script async src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="window.__leafletLoaded=true;window.dispatchEvent(new Event('leaflet-ready'))" onerror="window.dispatchEvent(new Event('leaflet-failed'))"></script>
+  <script>
+    const API_URL = "/.netlify/functions/api";
+    const LOCAL_KEY = "marathonBetaStateV1";
+    const SESSION_KEY = "marathonBetaSessionV1";
+    const INVITE_CODES = ["RUN2026", "TEST330", "XN330"];
+
+    const state = {
+      view: "loading",
+      tab: "passport",
+      history: [],
+      mapFilter: "mine",
+      archiveFilter: "all",
+      editingResultId: null,
+      selectedResultId: null,
+      selectedEventId: "xiamen-2024",
+      reportTouched: false,
+      reportManualConfirmed: false,
+      reportOcrStatus: "idle",
+      reportOcrMessage: "先上传成绩单截图；系统会读取赛事、成绩和排名，下面字段只做校对补充。",
+      feedTab: "pb",
+      posterMode: "auto",
+      storageMode: "loading",
+      currentUserId: null,
+      publicUserId: null
+    };
+
+    let db = null;
+    let footprintMap = null;
+    let routeLine = null;
+    let tesseractPromise = null;
+
+    const screen = document.querySelector("#screen");
+    const topbar = document.querySelector("#topbar");
+    const title = document.querySelector("#appTitle");
+    const subtitle = document.querySelector("#appSubtitle");
+    const backBtn = document.querySelector("#backBtn");
+    const toast = document.querySelector("#toast");
+    const tabbar = document.querySelector("#tabbar");
+
+    const raceEvents = [
+      ["xiamen-2024", "厦门马拉松", "厦门", "福建", "2024-01-07", 24.4798, 118.0894, "世界田联白金标", "全马", 35000],
+      ["wuxi-2024", "无锡马拉松", "无锡", "江苏", "2024-03-24", 31.4912, 120.3119, "世界田联金标", "全马", 30800],
+      ["lanzhou-2024", "兰州马拉松", "兰州", "甘肃", "2024-05-26", 36.0611, 103.8343, "A1认证赛事", "全马", 28000],
+      ["shenyang-2024", "沈阳马拉松", "沈阳", "辽宁", "2024-09-08", 41.8057, 123.4315, "A1认证赛事", "全马", 26000],
+      ["beijing-2023", "北京马拉松", "北京", "北京", "2023-10-29", 39.9042, 116.4074, "世界田联金标", "全马", 30000],
+      ["shanghai-2023", "上海马拉松", "上海", "上海", "2023-11-26", 31.2304, 121.4737, "世界田联白金标", "全马", 28000],
+      ["wuhan-2025", "武汉马拉松", "武汉", "湖北", "2025-03-23", 30.5928, 114.3055, "A1认证赛事", "全马", 36000],
+      ["xianning-2026", "咸宁马拉松", "咸宁", "湖北", "2026-03-29", 29.8413, 114.3226, "城市特色赛事", "全马", 13000],
+      ["xianning-2025", "咸宁马拉松", "咸宁", "湖北", "2025-04-13", 29.8413, 114.3226, "城市特色赛事", "全马", 18000],
+      ["xiangjiang-half-2026", "湘江半程马拉松", "长沙", "湖南", "2026-04-26", 28.2282, 112.9388, "城市经典半马", "半马", 15000],
+      ["hangzhou-2024", "杭州马拉松", "杭州", "浙江", "2024-11-03", 30.2741, 120.1551, "A1认证赛事", "全马", 33000],
+      ["chengdu-2024", "成都马拉松", "成都", "四川", "2024-10-27", 30.5728, 104.0668, "世界田联金标", "全马", 35000],
+      ["guangzhou-2024", "广州马拉松", "广州", "广东", "2024-12-08", 23.1291, 113.2644, "世界田联金标", "全马", 30000],
+      ["nanjing-2024", "南京马拉松", "南京", "江苏", "2024-11-17", 32.0603, 118.7969, "A1认证赛事", "全马", 28000],
+      ["qingdao-2024", "青岛马拉松", "青岛", "山东", "2024-04-21", 36.0671, 120.3826, "海滨赛事", "全马", 25000],
+      ["chongqing-2024", "重庆马拉松", "重庆", "重庆", "2024-03-31", 29.5630, 106.5516, "A1认证赛事", "全马", 30000],
+      ["changsha-2024", "长沙马拉松", "长沙", "湖南", "2024-10-20", 28.2282, 112.9388, "A1认证赛事", "全马", 26000],
+      ["hefei-2024", "合肥马拉松", "合肥", "安徽", "2024-11-10", 31.8206, 117.2272, "A1认证赛事", "全马", 22000],
+      ["harbin-2024", "哈尔滨马拉松", "哈尔滨", "黑龙江", "2024-08-25", 45.8038, 126.5349, "城市特色赛事", "全马", 30000],
+      ["shenzhen-2024", "深圳马拉松", "深圳", "广东", "2024-12-01", 22.5431, 114.0579, "A1认证赛事", "全马", 25000],
+      ["suzhou-2024", "苏州马拉松", "苏州", "江苏", "2024-03-10", 31.2989, 120.5853, "A1认证赛事", "半马", 25000],
+      ["yangzhou-2024", "扬州半程马拉松", "扬州", "江苏", "2024-04-14", 32.3932, 119.4129, "世界田联金标", "半马", 35000],
+      ["kunming-2024", "昆明高原半程马拉松", "昆明", "云南", "2024-09-22", 25.0389, 102.7183, "高原赛事", "半马", 18000],
+      ["zhengzhou-2024", "郑州马拉松", "郑州", "河南", "2024-10-13", 34.7466, 113.6254, "A1认证赛事", "全马", 26000],
+      ["jinan-2024", "济南马拉松", "济南", "山东", "2024-10-27", 36.6512, 117.1201, "A1认证赛事", "全马", 30000],
+      ["fuzhou-2024", "福州马拉松", "福州", "福建", "2024-12-15", 26.0745, 119.2965, "城市特色赛事", "全马", 20000],
+      ["taiyuan-2024", "太原马拉松", "太原", "山西", "2024-09-22", 37.8706, 112.5489, "世界田联金标", "全马", 30000],
+      ["nanchang-2024", "南昌马拉松", "南昌", "江西", "2024-11-10", 28.6820, 115.8579, "A1认证赛事", "全马", 25000],
+      ["ningbo-2024", "宁波马拉松", "宁波", "浙江", "2024-12-01", 29.8683, 121.5440, "A1认证赛事", "全马", 20000],
+      ["xian-2024", "西安马拉松", "西安", "陕西", "2024-10-27", 34.3416, 108.9398, "A1认证赛事", "全马", 35000],
+      ["dalian-2024", "大连马拉松", "大连", "辽宁", "2024-05-12", 38.9140, 121.6147, "老牌赛事", "全马", 30000],
+      ["guiyang-2024", "贵阳马拉松", "贵阳", "贵州", "2024-06-16", 26.6470, 106.6302, "高原赛事", "全马", 23000],
+      ["hainan-2024", "海南儋州马拉松", "儋州", "海南", "2024-12-22", 19.5209, 109.5808, "海岛赛事", "全马", 18000],
+      ["tianjin-2024", "天津马拉松", "天津", "天津", "2024-10-20", 39.3434, 117.3616, "A1认证赛事", "全马", 30000]
+    ].map(([id, name, city, province, date, lat, lng, grade, distance, capacity]) => ({ id, name, city, province, date, lat, lng, grade, distance, capacity }));
+
+    const runnerGoals = [
+      { id: "pb", label: "冲 PB", short: "PB 高光", line: "突出成绩、配速、排名和达标证书。" },
+      { id: "photo", label: "拍照出片", short: "出片优先", line: "突出城市地标、奖牌、照片和朋友圈观感。" },
+      { id: "vlog", label: "Vlog 记录", short: "视频叙事", line: "突出路线节点、第一视角素材和赛后剪辑脚本。" },
+      { id: "finish", label: "佛系完赛", short: "完赛纪念", line: "突出完赛、同行朋友、赛后感受和城市记忆。" }
+    ];
+
+    const runnerStyles = [
+      { id: "zen", label: "佛系跑者", line: "轻松完赛，照片好看，今天就算赢。" },
+      { id: "race", label: "严肃竞速", line: "配速、排名、达标，所有努力都有数字证明。" },
+      { id: "glam", label: "赛道香风", line: "城市、穿搭、奖牌和镜头感，跑完就能发圈。" },
+      { id: "video", label: "视频出片", line: "起跑、补给、冲线和口播，一条短视频直接成型。" }
+    ];
+
+    const titles = {
+      loading: ["跑马纪念册", "正在准备内测数据"],
+      register: ["内测注册", "1分钟建立你的跑马护照"],
+      passport: ["参赛护照", "完赛结果自动沉淀成纪念"],
+      map: ["城市足迹", "我的跑马地图与城市纪念章"],
+      archive: ["完赛档案", "成绩、证书、奖牌和路线"],
+      community: ["同场跑友", "同一场比赛的人更有共同话题"],
+      profile: ["我的纪念册", "可公开分享的个人主页"],
+      report: ["添加完赛", "填报成绩或 OCR 读取成绩单"],
+      settings: ["跑者档案", "更新你的公开资料"],
+      poster: ["完赛海报", "把成绩变成可分享的记忆"],
+      admin: ["内测数据", "查看测试规模和反馈"],
+      feedback: ["提交反馈", "告诉我们哪里不好用"]
+    };
+
+    function rng(seed) {
+      return function next() {
+        seed |= 0;
+        seed = seed + 0x6D2B79F5 | 0;
+        let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+        t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+        return ((t ^ t >>> 14) >>> 0) / 4294967296;
+      };
+    }
+
+    const random = rng(3302026);
+    const pick = list => list[Math.floor(random() * list.length)];
+    const pad2 = value => String(value).padStart(2, "0");
+    const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
+    const uid = prefix => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+
+    function secondsToTime(seconds) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      const s = Math.floor(seconds % 60);
+      return `${h}:${pad2(m)}:${pad2(s)}`;
+    }
+
+    function pace(seconds, km) {
+      const value = Math.round(seconds / km);
+      return `${Math.floor(value / 60)}:${pad2(value % 60)}/km`;
+    }
+
+    const AGE_GROUPS = [
+      { label: "34岁以下", min: 0, max: 34 },
+      { label: "35-39", min: 35, max: 39 },
+      { label: "40-44", min: 40, max: 44 },
+      { label: "45-49", min: 45, max: 49 },
+      { label: "50-54", min: 50, max: 54 },
+      { label: "55-59", min: 55, max: 59 },
+      { label: "60-64", min: 60, max: 64 },
+      { label: "65岁以上", min: 65, max: 120 }
+    ];
+
+    const ROAD_LEVEL_STANDARDS = {
+      "全马": {
+        male: [
+          ["3:00:00", "3:30:00", "4:00:00"],
+          ["3:10:00", "3:40:00", "4:10:00"],
+          ["3:15:00", "3:45:00", "4:15:00"],
+          ["3:20:00", "3:50:00", "4:20:00"],
+          ["3:30:00", "4:00:00", "4:30:00"],
+          ["3:40:00", "4:10:00", "4:40:00"],
+          ["3:50:00", "4:20:00", "4:50:00"],
+          ["4:00:00", "4:30:00", "5:00:00"]
+        ],
+        female: [
+          ["3:20:00", "3:50:00", "4:20:00"],
+          ["3:30:00", "4:00:00", "4:30:00"],
+          ["3:35:00", "4:05:00", "4:35:00"],
+          ["3:40:00", "4:10:00", "4:40:00"],
+          ["3:50:00", "4:20:00", "4:50:00"],
+          ["4:00:00", "4:30:00", "5:00:00"],
+          ["4:20:00", "4:50:00", "5:20:00"],
+          ["4:30:00", "5:00:00", "5:30:00"]
+        ]
+      },
+      "半马": {
+        male: [
+          ["1:25:00", "1:35:00", "1:55:00"],
+          ["1:30:00", "1:40:00", "2:00:00"],
+          ["1:32:00", "1:42:00", "2:02:00"],
+          ["1:35:00", "1:45:00", "2:05:00"],
+          ["1:40:00", "1:50:00", "2:10:00"],
+          ["1:45:00", "1:55:00", "2:15:00"],
+          ["1:50:00", "2:00:00", "2:20:00"],
+          ["1:55:00", "2:05:00", "2:25:00"]
+        ],
+        female: [
+          ["1:35:00", "1:45:00", "2:05:00"],
+          ["1:40:00", "1:50:00", "2:10:00"],
+          ["1:42:00", "1:52:00", "2:12:00"],
+          ["1:45:00", "1:55:00", "2:15:00"],
+          ["1:50:00", "2:00:00", "2:20:00"],
+          ["1:55:00", "2:05:00", "2:25:00"],
+          ["2:05:00", "2:15:00", "2:35:00"],
+          ["2:10:00", "2:20:00", "2:40:00"]
+        ]
+      }
+    };
+
+    function normalizeGender(value) {
+      const text = String(value || "").toLowerCase();
+      if (["male", "m", "男", "男子", "男性"].includes(text)) return "male";
+      if (["female", "f", "女", "女子", "女性"].includes(text)) return "female";
+      return "";
+    }
+
+    function runnerAgeOnDate(user, eventDate) {
+      if (!user?.birthDate || !eventDate) return null;
+      const birth = new Date(user.birthDate);
+      const race = new Date(eventDate);
+      if (Number.isNaN(birth.getTime()) || Number.isNaN(race.getTime())) return null;
+      let age = race.getFullYear() - birth.getFullYear();
+      const raceMonthDay = (race.getMonth() + 1) * 100 + race.getDate();
+      const birthMonthDay = (birth.getMonth() + 1) * 100 + birth.getDate();
+      if (raceMonthDay < birthMonthDay) age -= 1;
+      return age;
+    }
+
+    function ageGroupIndex(age) {
+      return AGE_GROUPS.findIndex(group => age >= group.min && age <= group.max);
+    }
+
+    function roadLevelFor(seconds, distance, user = getCurrentUser(), eventDate = "") {
+      const gender = normalizeGender(user?.gender);
+      const age = runnerAgeOnDate(user, eventDate);
+      const groupIndex = ageGroupIndex(age);
+      const thresholds = ROAD_LEVEL_STANDARDS[distance]?.[gender]?.[groupIndex];
+      if (!gender || age === null || groupIndex < 0) return "待补充档案";
+      if (!thresholds) return "未评级";
+      const labels = ["大众精英", "大众一级", "大众二级"];
+      const matched = thresholds.findIndex(limit => seconds <= parseTime(limit));
+      return matched >= 0 ? labels[matched] : "未达标";
+    }
+
+    function levelFor(seconds, distance) {
+      if (distance === "半马") {
+        if (seconds <= 5400) return "大众精英";
+        if (seconds <= 6600) return "大众一级";
+        if (seconds <= 7800) return "大众二级";
+        return "未达标";
+      }
+      if (seconds <= 12600) return "大众精英";
+      if (seconds <= 14400) return "大众一级";
+      if (seconds <= 16800) return "大众二级";
+      return "未达标";
+    }
+
+    function eventDistanceKm(event) {
+      return event.distance === "半马" ? 21.0975 : 42.195;
+    }
+
+    function generateSeed() {
+      const cities = ["武汉", "咸宁", "厦门", "无锡", "上海", "北京", "杭州", "成都", "重庆", "南京", "广州", "深圳", "长沙", "兰州", "沈阳", "青岛", "哈尔滨", "昆明", "西安", "郑州"];
+      const nickA = ["东湖", "江城", "湖边", "配速", "破三", "周末", "汉口", "光谷", "海风", "山路", "晨跑", "夜跑", "稳住", "冲线", "补给", "一路", "老街", "江滩", "热干面", "桂花"];
+      const nickB = ["阿明", "老周", "小陈", "Lily", "阿杰", "小夏", "老李", "小雨", "阿峰", "小赵", "阿宁", "大宇", "小北", "阿南", "一鸣", "小宋", "阿琳", "阿凯", "小朱", "阿森"];
+      const users = [];
+      const results = [];
+      const posts = [];
+      const feedback = [];
+      const usedNames = new Set();
+
+      for (let i = 0; i < 168; i += 1) {
+        let nickname = `${pick(nickA)}${pick(nickB)}`;
+        while (usedNames.has(nickname)) nickname = `${pick(nickA)}${pick(nickB)}${i}`;
+        usedNames.add(nickname);
+        const homeCity = pick(cities);
+        const runningYears = 1 + Math.floor(random() * 11);
+        const baseFull = Math.round(10300 + random() * 9500 + (i % 9) * 120);
+        const gender = random() > 0.34 ? "male" : "female";
+        const birthDate = `${1972 + Math.floor(random() * 25)}-${pad2(1 + Math.floor(random() * 12))}-${pad2(1 + Math.floor(random() * 27))}`;
+        const user = {
+          id: `seed_user_${i + 1}`,
+          slug: `runner-${i + 1}`,
+          nickname,
+          homeCity,
+          gender,
+          birthDate,
+          runningYears,
+          runnerGoal: pick(runnerGoals).id,
+          runnerStyle: pick(runnerStyles).id,
+          motto: pick(["每一场完赛，都值得被记住", "跑过的城市，都是自己的纪念章", "不追每天，只收好每一场", "成绩会过去，记忆会留下", "下一次起跑，还是热爱"]),
+          publicProfile: random() > 0.18,
+          synthetic: true,
+          createdAt: "2026-06-03T00:00:00.000Z"
+        };
+        users.push(user);
+
+        const count = 1 + Math.floor(random() * 9);
+        const sampledEvents = [...raceEvents].sort(() => random() - 0.5).slice(0, count);
+        let bestFull = Infinity;
+        let bestHalf = Infinity;
+        sampledEvents.forEach((event, index) => {
+          const km = eventDistanceKm(event);
+          const base = event.distance === "半马" ? Math.round(baseFull * 0.47) : baseFull;
+          const variance = Math.round((random() - 0.24) * (event.distance === "半马" ? 1800 : 4200));
+          const seconds = Math.max(event.distance === "半马" ? 4500 : 9000, base + variance + index * 90);
+          const isFullPb = event.distance === "全马" && seconds < bestFull;
+          const isHalfPb = event.distance === "半马" && seconds < bestHalf;
+          if (event.distance === "全马") bestFull = Math.min(bestFull, seconds);
+          if (event.distance === "半马") bestHalf = Math.min(bestHalf, seconds);
+          results.push({
+            id: `seed_result_${i + 1}_${event.id}`,
+            userId: user.id,
+            eventId: event.id,
+            eventName: event.name,
+            city: event.city,
+            date: event.date,
+            distance: event.distance,
+            seconds,
+            time: secondsToTime(seconds),
+            pace: pace(seconds, km),
+            rank: `${Math.max(80, Math.round(seconds / 12 + random() * 1800))} / ${event.capacity}`,
+            ageRank: `${Math.max(12, Math.round(seconds / 55 + random() * 330))} / ${Math.round(event.capacity * 0.075)}`,
+            level: roadLevelFor(seconds, event.distance, user, event.date),
+            official: random() > 0.22,
+            pb: isFullPb || isHalfPb,
+            medal: random() > 0.16 ? "gold" : "silver",
+            source: random() > 0.35 ? "official" : "manual",
+            note: pick(["补给稳定，最后十公里撑住了", "赛道氛围很好，冲线很有记忆点", "天气有点热，但整体发挥正常", "赛后证书等了很久，想自己先收进纪念册", "和朋友一起完赛，这场很特别"]),
+            synthetic: true,
+            createdAt: event.date + "T10:30:00.000Z"
+          });
+        });
+      }
+
+      const postTemplates = {
+        pb: ["终于刷新 PB，最后两公里全靠意志撑住。", "这场配速很稳，冲线那一下很值。", "破目标了，想把这场单独做成纪念册。"],
+        route: ["后半程风有点大，过桥那段需要心理准备。", "赛道观众很多，进城那段气氛最好。", "折返点略密，跟跑的时候要注意节奏。"],
+        supply: ["补给桌够长，水站志愿者很给力。", "盐丸点设置合理，天气热的时候很关键。", "赛后领物动线还可以再顺一点。"],
+        photo: ["沿途照片很出片，尤其是城市地标那一段。", "冲线照终于拍清楚了，可以做海报。", "同场跑友有没有拍到 330 兔子附近的照片？"]
+      };
+      const topicKeys = Object.keys(postTemplates);
+      for (let i = 0; i < 260; i += 1) {
+        const user = pick(users);
+        const userResults = results.filter(result => result.userId === user.id);
+        const result = pick(userResults.length ? userResults : results);
+        const topic = pick(topicKeys);
+        posts.push({
+          id: `seed_post_${i + 1}`,
+          userId: user.id,
+          eventId: result.eventId,
+          topic,
+          content: pick(postTemplates[topic]),
+          likes: Math.floor(8 + random() * 180),
+          comments: Math.floor(random() * 42),
+          synthetic: true,
+          createdAt: new Date(Date.now() - Math.round(random() * 1000 * 60 * 60 * 24 * 80)).toISOString()
+        });
+      }
+
+      for (let i = 0; i < 26; i += 1) {
+        feedback.push({
+          id: `seed_feedback_${i + 1}`,
+          userId: pick(users).id,
+          type: pick(["功能建议", "体验问题", "内容想法"]),
+          content: pick(["希望支持把官方成绩单截图一起保存", "同场跑友这个入口很有意思，可以按配速段筛", "城市足迹地图希望能看全国跑友热力", "个人主页可以加年度回顾", "希望有亲友可看的公开分享页"]),
+          synthetic: true,
+          createdAt: new Date(Date.now() - Math.round(random() * 1000 * 60 * 60 * 24 * 30)).toISOString()
+        });
+      }
+
+      return {
+        version: 1,
+        seededAt: "2026-06-03T00:00:00.000Z",
+        savedAt: null,
+        deletedResultIds: [],
+        events: raceEvents,
+        users,
+        results,
+        posts,
+        feedback
+      };
+    }
+
+    function getCurrentUser() {
+      return db?.users.find(user => user.id === state.currentUserId) || null;
+    }
+
+    function userInitial(user) {
+      return safe((user?.nickname || "跑者").slice(0, 1));
+    }
+
+    function userResults(userId = state.currentUserId) {
+      return (db?.results || [])
+        .filter(result => result.userId === userId)
+        .sort((a, b) => b.date.localeCompare(a.date));
+    }
+
+    function bestResult(results, distance = "全马") {
+      return results.filter(result => result.distance === distance).sort((a, b) => a.seconds - b.seconds)[0] || null;
+    }
+
+    function userStats(userId = state.currentUserId) {
+      const results = userResults(userId);
+      const cities = new Set(results.map(result => result.city));
+      const fullPb = bestResult(results, "全马");
+      const halfPb = bestResult(results, "半马");
+      const officialCount = results.filter(result => result.official).length;
+      const bestLevel = fullPb ? fullPb.level : (halfPb ? halfPb.level : "待点亮");
+      return { results, cities, fullPb, halfPb, officialCount, bestLevel };
+    }
+
+    function resultEvent(result) {
+      return db.events.find(event => event.id === result.eventId) || raceEvents.find(event => event.id === result.eventId);
+    }
+
+    function goalById(id) {
+      return runnerGoals.find(goal => goal.id === id) || runnerGoals[0];
+    }
+
+    function styleById(id) {
+      return runnerStyles.find(style => style.id === id) || runnerStyles[0];
+    }
+
+    function currentGoal(user = getCurrentUser()) {
+      const mode = state.posterMode === "auto" ? user?.runnerGoal : state.posterMode;
+      return goalById(mode || "pb");
+    }
+
+    function posterCopyFor(result, user, goal) {
+      const city = result.city || "这座城";
+      const name = user?.nickname || "跑者";
+      const style = styleById(user?.runnerStyle || "zen");
+      const pbText = result.pb ? "PB 成功" : "完赛成功";
+      const copy = {
+        pb: {
+          title: pbText,
+          line: `${name} · ${style.label}`,
+          foot: `${city}的风，PB 的见证。`
+        },
+        photo: {
+          title: "出片成功",
+          line: `${city}很好看，${style.label}也能很出片`,
+          foot: `奖牌、城市和冲线瞬间，都值得发出去。`
+        },
+        vlog: {
+          title: "Vlog 素材到位",
+          line: `${style.label} · ${city}赛道第一视角`,
+          foot: `起跑、补给、冲线，剪成一条完整回忆。`
+        },
+        finish: {
+          title: "完赛成功",
+          line: `${name} · ${style.label}`,
+          foot: `不必每天晒训练，但每场完赛都值得保存。`
+        }
+      };
+      const selected = copy[goal.id] || copy.pb;
+      return { ...selected, styleLine: style.line };
+    }
+
+    function eventAssets(event) {
+      return [
+        ["路线图", `${event.city}城市路线`],
+        ["参赛服", `${event.date.slice(0, 4)} 赛事服`],
+        ["奖牌", `${event.grade}`],
+        ["号码布", `${event.city} A8123`]
+      ];
+    }
+
+    function normalizeBetaState(next) {
+      if (!next) return next;
+      next.version = Math.max(Number(next.version || 1), 2);
+      next.deletedResultIds = [...new Set(next.deletedResultIds || [])];
+      next.events = mergeById(raceEvents, next.events || []).map(event => ({
+        ...event,
+        assets: event.assets || eventAssets(event)
+      }));
+      next.users = (next.users || []).map(user => ({
+        ...user,
+        gender: user.gender || "",
+        birthDate: user.birthDate || "",
+        runnerGoal: user.runnerGoal || "pb",
+        runnerStyle: user.runnerStyle || "zen",
+        publicProfile: user.publicProfile !== false
+      }));
+      const deletedResultIds = new Set(next.deletedResultIds);
+      next.results = (next.results || []).filter(result => !deletedResultIds.has(result.id)).map(result => {
+        const event = next.events.find(item => item.id === result.eventId);
+        return {
+          ...result,
+          eventName: result.eventName || event?.name || "未命名赛事",
+          city: result.city || event?.city || "未知城市",
+          genderRank: result.genderRank || "",
+          assets: result.assets || {}
+        };
+      });
+      next.posts = next.posts || [];
+      next.feedback = next.feedback || [];
+      return next;
+    }
+
+    const EVENT_ALIASES = [
+      { city: "长沙", words: ["湘江", "湘马", "湘江半马", "湘江半程", "xiangjiang"] },
+      { city: "咸宁", words: ["咸宁", "xianning", "咸马"] },
+      { city: "武汉", words: ["武汉", "wuhan", "汉马"] },
+      { city: "厦门", words: ["厦门", "xiamen", "厦马"] },
+      { city: "无锡", words: ["无锡", "wuxi", "锡马"] },
+      { city: "上海", words: ["上海", "shanghai", "上马"] },
+      { city: "北京", words: ["北京", "beijing", "北马"] }
+    ];
+
+    function parseEventDateFromText(text) {
+      const value = normalizeScoreText(text);
+      const full = value.match(/(20\d{2})\s*(?:年|[-/.])\s*(\d{1,2})\s*(?:月|[-/.])\s*(\d{1,2})\s*(?:日)?/);
+      if (full) {
+        const date = `${full[1]}-${pad2(full[2])}-${pad2(full[3])}`;
+        return { date, year: full[1] };
+      }
+      const year = value.match(/(20\d{2})/);
+      return year ? { date: "", year: year[1] } : { date: "", year: "" };
+    }
+
+    function selectBestEventMatch(text, fileName = "") {
+      const value = normalizeScoreText(`${text || ""} ${fileName || ""}`).toLowerCase();
+      if (!value.trim() || !db?.events?.length) return null;
+      const parsedDate = parseEventDateFromText(value);
+      const aliasHit = EVENT_ALIASES.find(item => item.words.some(word => value.includes(word.toLowerCase())));
+      let candidates = db.events.filter(event => {
+        const direct = value.includes(event.city.toLowerCase()) || value.includes(event.name.toLowerCase());
+        return direct || (aliasHit && event.city === aliasHit.city);
+      });
+      if (!candidates.length) return null;
+      if (parsedDate.date) {
+        const exactDate = candidates.find(event => event.date === parsedDate.date);
+        if (exactDate) return exactDate;
+      }
+      if (parsedDate.year) {
+        const sameYear = candidates.find(event => event.date.startsWith(parsedDate.year));
+        if (sameYear) return sameYear;
+      }
+      return candidates.slice().sort((a, b) => b.date.localeCompare(a.date))[0] || null;
+    }
+
+    function findEventFromText(text) {
+      return selectBestEventMatch(text);
+    }
+
+    function loadScriptOnce(src) {
+      return new Promise((resolve, reject) => {
+        const existing = document.querySelector(`script[src="${src}"]`);
+        if (existing) {
+          existing.addEventListener("load", resolve, { once: true });
+          existing.addEventListener("error", reject, { once: true });
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = src;
+        script.async = true;
+        script.onload = resolve;
+        script.onerror = () => reject(new Error("ocr_script_failed"));
+        document.head.appendChild(script);
+      });
+    }
+
+    async function ensureTesseract() {
+      if (window.Tesseract?.createWorker) return window.Tesseract;
+      if (!tesseractPromise) {
+        tesseractPromise = loadScriptOnce("https://unpkg.com/tesseract.js@5/dist/tesseract.min.js").then(() => window.Tesseract);
+      }
+      const Tesseract = await tesseractPromise;
+      if (!Tesseract?.createWorker) throw new Error("ocr_library_unavailable");
+      return Tesseract;
+    }
+
+    function setReportOcrStatus(form, status, message) {
+      state.reportOcrStatus = status;
+      state.reportOcrMessage = message;
+      const input = form?.querySelector("[data-ocr-status]");
+      const statusCard = form?.querySelector("[data-ocr-status-card]");
+      if (input) input.value = status;
+      if (statusCard) {
+        statusCard.dataset.status = status;
+        statusCard.textContent = message;
+      }
+    }
+
+    function markReportManualConfirmed(form, confirmed = true) {
+      state.reportManualConfirmed = confirmed;
+      const input = form?.querySelector("[data-manual-confirmed]");
+      if (input) input.value = confirmed ? "true" : "false";
+    }
+
+    function selectedReportEvent(form) {
+      return db.events.find(item => item.id === form?.eventId?.value) || db.events.find(item => item.id === state.selectedEventId) || db.events[0];
+    }
+
+    function updateLevelFromForm(form) {
+      if (!form?.time?.value) return;
+      const seconds = parseTime(form.time.value);
+      if (!seconds) return;
+      const eventInfo = selectedReportEvent(form);
+      const distance = String(form.distance?.value || eventInfo.distance);
+      if (form.level) form.level.value = roadLevelFor(seconds, distance, getCurrentUser(), eventInfo.date);
+    }
+
+    function applyEventToReportForm(form, eventInfo) {
+      if (!form || !eventInfo) return;
+      state.selectedEventId = eventInfo.id;
+      if (form.eventQuery) form.eventQuery.value = eventInfo.city;
+      if (form.eventId) form.eventId.value = eventInfo.id;
+      if (form.distance) form.distance.value = eventInfo.distance;
+      updateLevelFromForm(form);
+    }
+
+    function normalizeScoreText(text) {
+      return String(text || "")
+        .replace(/[ \t\r]+/g, " ")
+        .replace(/([\u4e00-\u9fa5])\s+([\u4e00-\u9fa5])/g, "$1$2")
+        .replace(/[：]/g, ":")
+        .replace(/[／]/g, "/")
+        .trim();
+    }
+
+    function parseLabeledTimeFromText(text, labels) {
+      const value = normalizeScoreText(text);
+      const label = labels.map(escapeRegExp).join("|");
+      const matched = value.match(new RegExp(`(?:${label})[^\\d]{0,18}(\\d{1,2}):([0-5]\\d):([0-5]\\d)`, "i"));
+      if (!matched) return "";
+      const candidate = `${Number(matched[1])}:${matched[2]}:${matched[3]}`;
+      const seconds = parseTime(candidate);
+      return seconds >= 2700 && seconds <= 36000 ? candidate : "";
+    }
+
+    function parseResultTimeFromText(text) {
+      const value = normalizeScoreText(text);
+      const netTime = parseLabeledTimeFromText(value, ["净计时成绩", "净成绩", "净计时", "净时间", "net time", "net"]);
+      if (netTime) return netTime;
+      const gunTime = parseLabeledTimeFromText(value, ["枪声成绩", "枪成绩", "枪声时间", "gun time", "gun"]);
+      if (gunTime) return gunTime;
+      const clock = value.match(/(?:成绩|净成绩|枪声成绩|完赛时间|用时|time)?[^\d]{0,10}(\d{1,2}):([0-5]\d):([0-5]\d)/i);
+      if (clock) {
+        const candidate = `${Number(clock[1])}:${clock[2]}:${clock[3]}`;
+        const seconds = parseTime(candidate);
+        if (seconds >= 2700 && seconds <= 36000) return candidate;
+      }
+      const chinese = value.match(/(\d{1,2})\s*(?:小时|时|h)\s*(\d{1,2})\s*(?:分|m)\s*(\d{1,2})?\s*(?:秒|s)?/i);
+      if (chinese) {
+        const candidate = `${Number(chinese[1])}:${pad2(chinese[2])}:${pad2(chinese[3] || 0)}`;
+        const seconds = parseTime(candidate);
+        if (seconds >= 2700 && seconds <= 36000) return candidate;
+      }
+      return "";
+    }
+
+    function escapeRegExp(text) {
+      return String(text).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    }
+
+    function parseRankFromText(text, labels) {
+      const value = normalizeScoreText(text);
+      const label = labels.map(escapeRegExp).join("|");
+      const matched = value.match(new RegExp(`(?:${label})[^\\d]{0,18}(\\d{1,6})(?:\\s*/\\s*(\\d{2,6}))?`, "i"));
+      if (!matched) return "";
+      return matched[2] ? `${matched[1]} / ${matched[2]}` : matched[1];
+    }
+
+    function parseNetRankFromSection(text, sectionLabels) {
+      const value = normalizeScoreText(text);
+      const labelIndex = sectionLabels
+        .map(label => value.toLowerCase().indexOf(label.toLowerCase()))
+        .filter(index => index >= 0)
+        .sort((a, b) => a - b)[0];
+      if (labelIndex === undefined) return "";
+      const section = value.slice(labelIndex, labelIndex + 220);
+      const net = section.match(/(?:净计时成绩|净成绩|净计时|net time|net)[^\d]{0,24}(\d{1,6})\s*(?:名)?/i);
+      if (net) return net[1];
+      const gun = section.match(/(?:枪声成绩|枪成绩|gun time|gun)[^\d]{0,24}(\d{1,6})\s*(?:名)?/i);
+      return gun ? gun[1] : "";
+    }
+
+    function parseOverallRankFromText(text) {
+      return parseNetRankFromSection(text, ["全部选手排名", "全部排名", "总排名", "总名次", "OVERALL PLACE", "overall place", "overall"])
+        || parseRankFromText(text, ["总排名", "总名次", "总成绩排名", "总成绩名次", "overall"]);
+    }
+
+    function parseGenderRankFromText(text) {
+      return parseNetRankFromSection(text, ["性别排名", "性别名次", "GENDER PLACE", "gender place"])
+        || parseRankFromText(text, ["性别排名", "性别名次", "男子排名", "男子名次", "女子排名", "女子名次", "男排名", "女排名", "gender", "male", "female"]);
+    }
+
+    function parseAgeRankFromText(text) {
+      return parseRankFromText(text, ["年龄组排名", "年龄组名次", "年龄排名", "年龄名次", "分组排名", "分组名次", "组别排名", "组别名次", "age group", "age"]);
+    }
+
+    function parseDistanceFromText(text, event) {
+      const value = normalizeScoreText(text).toLowerCase();
+      if (/半程|半马|half|21\.?0975?|21k/.test(value)) return "半马";
+      if (/全程|全马|marathon|42\.?195|42k/.test(value)) return "全马";
+      return event?.distance || "全马";
+    }
+
+    function parseOcrResult(text, fileName = "") {
+      const normalized = normalizeScoreText(text);
+      const event = selectBestEventMatch(normalized, fileName);
+      const time = parseResultTimeFromText(normalized);
+      const distance = parseDistanceFromText(normalized, event);
+      return {
+        event,
+        distance,
+        time,
+        rank: parseOverallRankFromText(normalized),
+        genderRank: parseGenderRankFromText(normalized),
+        ageRank: parseAgeRankFromText(normalized),
+        text: normalized
+      };
+    }
+
+    function applyOcrResult(form, result) {
+      if (result.event) {
+        applyEventToReportForm(form, result.event);
+        form.distance.value = result.distance || result.event.distance;
+      } else if (result.distance && form.distance) {
+        form.distance.value = result.distance;
+      }
+      if (result.time) {
+        form.time.value = result.time;
+        updateLevelFromForm(form);
+      }
+      if (result.rank) form.rank.value = result.rank;
+      if (result.genderRank) form.genderRank.value = result.genderRank;
+      if (result.ageRank) form.ageRank.value = result.ageRank;
+
+      const found = [
+        result.event ? result.event.city : "",
+        result.time ? `成绩 ${result.time}` : "",
+        result.rank ? `总排名 ${result.rank}` : "",
+        result.genderRank ? `性别排名 ${result.genderRank}` : "",
+        result.ageRank ? `年龄排名 ${result.ageRank}` : ""
+      ].filter(Boolean);
+
+      if (result.event) {
+        setReportOcrStatus(form, "verified", `OCR 已识别：${found.join("，")}。保存前请确认字段无误。`);
+        return;
+      }
+      if (result.time || result.rank || result.genderRank || result.ageRank) {
+        setReportOcrStatus(form, "partial", `OCR 读到部分成绩信息：${found.join("，") || "未匹配赛事"}。请选择正确赛事后再保存。`);
+        return;
+      }
+      setReportOcrStatus(form, "failed", "没有从图片里识别到赛事城市或成绩。请手动选择赛事、填写成绩后再保存。");
+    }
+
+    async function extractResultFromImage(file, form) {
+      if (!file?.type?.startsWith("image/")) {
+        setReportOcrStatus(form, "failed", "当前只支持图片成绩单 OCR，PDF 请手动填写。");
+        return null;
+      }
+      setReportOcrStatus(form, "reading", "正在读取成绩单图片文字，可能需要十几秒...");
+      try {
+        const Tesseract = await ensureTesseract();
+        const worker = await Tesseract.createWorker(["chi_sim", "eng"], 1, {
+          logger(progress) {
+            if (progress.status === "recognizing text" && progress.progress) {
+              const percent = Math.round(progress.progress * 100);
+              setReportOcrStatus(form, "reading", `正在识别成绩单文字 ${percent}%...`);
+            }
+          }
+        });
+        try {
+          const result = await worker.recognize(file, { rotateAuto: true });
+          const parsed = parseOcrResult(result?.data?.text || "", file.name);
+          applyOcrResult(form, parsed);
+          return parsed;
+        } finally {
+          await worker.terminate();
+        }
+      } catch (error) {
+        tesseractPromise = null;
+        setReportOcrStatus(form, "failed", "OCR 服务暂时不可用。请手动选择赛事和成绩，不会再自动写入默认赛事。");
+        return null;
+      }
+    }
+
+    function fileToDataUrl(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ""));
+        reader.onerror = () => reject(reader.error || new Error("file_read_failed"));
+        reader.readAsDataURL(file);
+      });
+    }
+
+    async function readResultAssets(form) {
+      const result = {};
+      const fields = [...form.querySelectorAll("[data-asset-file]")];
+      for (const input of fields) {
+        const file = input.files?.[0];
+        if (!file) continue;
+        const type = input.dataset.assetType;
+        const asset = { name: file.name, type: file.type || "image/*" };
+        if (file.type?.startsWith("image/") && file.size <= 1500 * 1024) {
+          asset.dataUrl = await fileToDataUrl(file);
+        } else if (file.size > 1500 * 1024) {
+          asset.note = "图片较大，已先记录文件名";
+        }
+        result[type] = asset;
+      }
+      return result;
+    }
+
+    function tag(text, className = "") {
+      return `<span class="tag ${className}">${safe(text)}</span>`;
+    }
+
+    function setTitle(view) {
+      const pair = titles[view] || titles.passport;
+      title.textContent = pair[0];
+      subtitle.textContent = pair[1];
+      backBtn.hidden = ["passport", "map", "archive", "community", "profile", "register", "loading"].includes(view);
+      tabbar.style.display = state.currentUserId ? "grid" : "none";
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("is-visible");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), 1900);
+    }
+
+    function navigate(view, options = {}) {
+      if (!db && view !== "loading") return;
+      const push = options.push !== false;
+      if (push && state.view !== view) state.history.push(state.view);
+      state.view = view;
+      if (["passport", "map", "archive", "community", "profile"].includes(view)) state.tab = view;
+      render();
+      screen.scrollTop = 0;
+    }
+
+    function goBack() {
+      const previous = state.history.pop();
+      navigate(previous || state.tab || "passport", { push: false });
+    }
+
+    function destroyMap() {
+      if (footprintMap) {
+        footprintMap.remove();
+        footprintMap = null;
+      }
+      routeLine = null;
+    }
+
+    function bindNav() {
+      document.querySelectorAll("[data-tab]").forEach(button => {
+        button.classList.toggle("is-active", button.dataset.tab === state.tab && state.view === state.tab);
+      });
+    }
+
+    function storageText() {
+      if (state.storageMode === "shared") return "线上共享数据";
+      if (state.storageMode === "local") return "本地离线数据";
+      return "数据同步中";
+    }
+
+    function renderRegister() {
+      return `
+        <div class="stack">
+          <section class="card hero-card">
+            <div class="runner-head">
+              <div class="avatar">测</div>
+              <div>
+                <h1>跑马纪念册<br>内测版</h1>
+                <div class="runner-meta">
+                  ${tag("邀请码 RUN2026", "orange")}
+                  ${tag(storageText(), state.storageMode === "shared" ? "green" : "")}
+                </div>
+              </div>
+            </div>
+            <div class="passport-stats">
+              <div><b>${db.users.length}</b><span>虚拟跑友</span></div>
+              <div><b>${db.results.length}</b><span>完赛记录</span></div>
+              <div><b>${db.events.length}</b><span>赛事样本</span></div>
+              <div><b>${db.posts.length}</b><span>同场动态</span></div>
+            </div>
+          </section>
+
+          <form class="card form-card form-grid" data-form="register">
+            <div class="field">
+              <label>内测邀请码</label>
+              <input name="invite" value="RUN2026" autocomplete="off">
+              <small>目前先用轻账号，方便发给跑友群快速试。</small>
+            </div>
+            <div class="field">
+              <label>跑者昵称</label>
+              <input name="nickname" placeholder="例如：咸宁阿明" maxlength="16" required>
+            </div>
+            <div class="split">
+              <div class="field">
+                <label>常住城市</label>
+                <input name="homeCity" placeholder="武汉" maxlength="12" required>
+              </div>
+              <div class="field">
+                <label>跑龄</label>
+                <select name="runningYears">
+                  ${Array.from({ length: 12 }, (_, index) => `<option value="${index + 1}">${index + 1} 年</option>`).join("")}
+                </select>
+              </div>
+            </div>
+            <div class="split">
+              <div class="field">
+                <label>性别</label>
+                <select name="gender" required>
+                  <option value="male">男</option>
+                  <option value="female">女</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>出生日期</label>
+                <input name="birthDate" type="date" required>
+              </div>
+            </div>
+            <div class="field">
+              <label>你更想把比赛记成什么</label>
+              <select name="runnerGoal">
+                ${runnerGoals.map(goal => `<option value="${goal.id}">${goal.label} · ${goal.short}</option>`).join("")}
+              </select>
+              <small>会影响海报重点：成绩、照片、Vlog 或完赛纪念。</small>
+            </div>
+            <div class="field">
+              <label>跑者风格</label>
+              <select name="runnerStyle">
+                ${runnerStyles.map(style => `<option value="${style.id}">${style.label}</option>`).join("")}
+              </select>
+              <small>影响海报文案语气，方便快速发朋友圈、短视频或小红书。</small>
+            </div>
+            <div class="field">
+              <label>一句话签名</label>
+              <input name="motto" placeholder="每一场完赛，都值得被记住" maxlength="32">
+            </div>
+            <button class="solid-btn" type="submit">建立我的跑马护照</button>
+          </form>
+        </div>
+      `;
+    }
+
+    function renderPassport() {
+      const user = getCurrentUser();
+      const stats = userStats();
+      const recent = stats.results[0];
+      const goal = goalById(user.runnerGoal);
+      return `
+        <div class="stack">
+          <section class="card hero-card">
+            <div class="runner-head">
+              <div class="avatar">${userInitial(user)}</div>
+              <div>
+                <h1>${safe(user.nickname)}</h1>
+                <div class="runner-meta">
+                  ${tag(`跑龄 ${user.runningYears} 年`, "gold")}
+                  ${tag(stats.bestLevel, "orange")}
+                  ${tag(goal.short, "blue")}
+                  ${tag(storageText(), state.storageMode === "shared" ? "green" : "")}
+                </div>
+              </div>
+            </div>
+            <div class="passport-stats">
+              <div><b>${stats.results.length}</b><span>完赛</span></div>
+              <div><b>${stats.cities.size}</b><span>城市</span></div>
+              <div><b>${stats.officialCount}</b><span>认证</span></div>
+              <div><b>${stats.bestLevel}</b><span>大众等级</span></div>
+            </div>
+          </section>
+
+          <div class="grid-2">
+            <button class="card metric-card" type="button" data-view="${stats.fullPb ? "poster" : "report"}">
+              <span>全马 PB</span>
+              <b>${stats.fullPb ? stats.fullPb.time : "待点亮"}</b>
+              <small>${stats.fullPb ? stats.fullPb.eventName : "添加一场全马成绩"}</small>
+            </button>
+            <button class="card metric-card" type="button" data-view="${stats.halfPb ? "poster" : "report"}">
+              <span>半马 PB</span>
+              <b>${stats.halfPb ? stats.halfPb.time : "待点亮"}</b>
+              <small>${stats.halfPb ? stats.halfPb.eventName : "添加一场半马成绩"}</small>
+            </button>
+          </div>
+
+          <div class="primary-actions">
+            <button class="action-btn" type="button" data-view="report">添加完赛</button>
+            <button class="ghost-btn" type="button" data-view="poster">生成海报</button>
+          </div>
+
+          <section class="section-title">
+            <h2>最近完赛</h2>
+            <span>${recent ? "已入册" : "还没有记录"}</span>
+          </section>
+          ${recent ? raceRow(recent, true) : `<div class="empty">先填一场你真实跑过的比赛，护照、地图和档案会立刻更新。</div>`}
+
+          <section class="section-title">
+            <h2>内测动态</h2>
+            <span>${db.users.length} 位跑友样本</span>
+          </section>
+          <section class="card insight-card">
+            <b>${safe(goal.label)}型跑者</b>
+            <p>${safe(goal.line)}海报会优先把这个“帅点”放大。</p>
+          </section>
+          <div class="admin-grid">
+            <section class="card admin-card"><b>${db.users.filter(user => !user.synthetic).length}</b><span>真实内测用户</span></section>
+            <section class="card admin-card"><b>${db.feedback.filter(item => !item.synthetic).length}</b><span>真实反馈</span></section>
+          </div>
+        </div>
+      `;
+    }
+
+    function groupedCityResults(scope) {
+      const source = scope === "sample" ? db.results : userResults();
+      const grouped = new Map();
+      source.forEach(result => {
+        const event = resultEvent(result);
+        if (!event) return;
+        const item = grouped.get(result.city) || {
+          city: result.city,
+          lat: event.lat,
+          lng: event.lng,
+          count: 0,
+          pb: false,
+          official: false,
+          best: result
+        };
+        item.count += 1;
+        item.pb = item.pb || result.pb;
+        item.official = item.official || result.official;
+        if (result.seconds < item.best.seconds) item.best = result;
+        grouped.set(result.city, item);
+      });
+      return [...grouped.values()];
+    }
+
+    function renderMap() {
+      const stats = userStats();
+      return `
+        <div class="stack">
+          <div class="chips">
+            ${[["mine", "我的足迹"], ["sample", "全站样本"], ["pb", "PB 城市"], ["official", "认证城市"]].map(([id, label]) => `<button class="chip ${state.mapFilter === id ? "is-active" : ""}" type="button" data-map-filter="${id}">${label}</button>`).join("")}
+          </div>
+          <section class="card map-card">
+            <div id="footprintMap" class="interactive-map" role="img" aria-label="跑马城市足迹地图"></div>
+            <div class="map-legend">
+              <span><i class="legend-dot" style="--dot:var(--orange)"></i>PB</span>
+              <span><i class="legend-dot" style="--dot:var(--blue)"></i>认证</span>
+              <span><i class="legend-dot" style="--dot:var(--gold)"></i>样本热度</span>
+            </div>
+          </section>
+          <div class="stat-strip">
+            <div><b>${stats.cities.size}</b><span>我的城市</span></div>
+            <div><b>${stats.results.length}</b><span>我的完赛</span></div>
+            <div><b>${groupedCityResults("sample").length}</b><span>样本城市</span></div>
+            <div><b>${db.results.length}</b><span>总记录</span></div>
+          </div>
+        </div>
+      `;
+    }
+
+    function markerColor(city) {
+      if (city.pb) return "#f36a17";
+      if (city.official) return "#4b95ff";
+      return "#d9b374";
+    }
+
+    function initMap() {
+      const container = document.querySelector("#footprintMap");
+      if (!container) return;
+      destroyMap();
+      const sourceScope = state.mapFilter === "sample" ? "sample" : "mine";
+      let cities = groupedCityResults(sourceScope);
+      if (state.mapFilter === "pb") cities = cities.filter(city => city.pb);
+      if (state.mapFilter === "official") cities = cities.filter(city => city.official);
+      if (!cities.length) {
+        container.innerHTML = `<div class="map-fallback">还没有足迹。添加一场完赛后，这里会点亮你的跑马城市。</div>`;
+        return;
+      }
+      if (!window.L) {
+        container.innerHTML = `<div class="map-fallback">地图控件加载中。当前已点亮 ${cities.length} 座城市。</div>`;
+        return;
+      }
+      const isMobile = window.matchMedia("(max-width: 700px)").matches;
+      footprintMap = L.map(container, {
+        attributionControl: true,
+        boxZoom: false,
+        scrollWheelZoom: false,
+        zoomControl: true
+      }).setView(isMobile ? [32.5, 112.3] : [33.2, 112.8], isMobile ? 3.72 : 4.25);
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        maxZoom: 18,
+        minZoom: 3
+      }).addTo(footprintMap);
+      if (cities.length > 1) {
+        routeLine = L.polyline(cities.map(city => [city.lat, city.lng]), {
+          color: "#f36a17",
+          dashArray: "8 10",
+          lineCap: "round",
+          opacity: 0.62,
+          weight: 3
+        }).addTo(footprintMap);
+      }
+      cities.forEach(city => {
+        const size = 18 + Math.min(city.count, 6) * 2;
+        const color = markerColor(city);
+        const icon = L.divIcon({
+          className: "",
+          html: `<div class="footprint-marker" style="--marker-size:${size}px;--marker-color:${color}"><span class="marker-label">${safe(city.city)} ${city.count}</span></div>`,
+          iconSize: [size, size],
+          iconAnchor: [size / 2, size / 2],
+          popupAnchor: [0, -size / 2]
+        });
+        L.marker([city.lat, city.lng], { icon })
+          .addTo(footprintMap)
+          .bindPopup(`<b>${safe(city.city)}</b><br>${safe(city.best.eventName)}<br>${safe(city.best.time)} · ${safe(city.best.level)}`);
+      });
+      setTimeout(() => footprintMap?.invalidateSize(), 60);
+    }
+
+    function medalClass(result) {
+      return `medal ${result.medal === "silver" ? "silver" : ""}`;
+    }
+
+    function raceRow(result, single = false) {
+      return `
+        <button class="card race-row" type="button" data-result-id="${safe(result.id)}" data-view="poster">
+          <div class="${medalClass(result)}" aria-hidden="true"></div>
+          <div>
+            <h3>${safe(result.eventName)} | ${safe(result.city)}</h3>
+            <p>${safe(result.date)} · ${safe(result.distance)} · ${safe(result.pace)}</p>
+            <div class="race-time">${safe(result.time)}</div>
+            <div class="runner-meta">
+              ${result.pb ? tag("PB", "orange") : ""}
+              ${result.official ? tag("认证", "blue") : tag("待认证")}
+              ${tag(result.level, "gold")}
+            </div>
+          </div>
+          <span class="row-action" aria-hidden="true">${single ? "" : "›"}</span>
+        </button>
+      `;
+    }
+
+    function renderArchive() {
+      const results = userResults();
+      const filtered = state.archiveFilter === "all" ? results : results.filter(result => state.archiveFilter === "official" ? result.official : result.pb);
+      const years = [...new Set(filtered.map(result => result.date.slice(0, 4)))];
+      return `
+        <div class="stack">
+          <div class="toolbar">
+            <div class="search">${results.length ? `已收录 ${results.length} 场完赛` : "还没有完赛记录"}</div>
+            <button class="ghost-btn" type="button" data-view="report">新增</button>
+          </div>
+          <div class="chips">
+            ${[["all", "全部"], ["official", "官方认证"], ["pb", "PB"]].map(([id, label]) => `<button class="chip ${state.archiveFilter === id ? "is-active" : ""}" type="button" data-archive-filter="${id}">${label}</button>`).join("")}
+          </div>
+          ${filtered.length ? years.map(year => `
+            <div class="year-head"><b>${year} 年</b><span>${filtered.filter(result => result.date.startsWith(year)).length} 场</span></div>
+            <div class="stack">${filtered.filter(result => result.date.startsWith(year)).map(result => raceRow(result)).join("")}</div>
+          `).join("") : `<div class="empty">先从“新增”录入一场比赛。</div>`}
+        </div>
+      `;
+    }
+
+    function renderCommunity() {
+      const event = db.events.find(item => item.id === state.selectedEventId) || db.events[0];
+      const posts = db.posts
+        .filter(post => post.eventId === event.id && (state.feedTab === "all" || post.topic === state.feedTab))
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+        .slice(0, 18);
+      const participants = new Set(db.results.filter(result => result.eventId === event.id).map(result => result.userId));
+      return `
+        <div class="stack">
+          <section class="card race-row" style="grid-template-columns:1fr auto">
+            <div>
+              <h3>${safe(event.name)}</h3>
+              <p>${safe(event.date)} · ${safe(event.city)} · 样本同场 ${participants.size} 人</p>
+            </div>
+            ${tag(event.grade, "blue")}
+          </section>
+          <div class="field">
+            <select data-select-event>
+              ${db.events.map(item => `<option value="${safe(item.id)}" ${item.id === event.id ? "selected" : ""}>${safe(item.name)} · ${safe(item.date)}</option>`).join("")}
+            </select>
+          </div>
+          <div class="feed-tabs">
+            ${[["all", "全部"], ["pb", "PB报喜"], ["route", "赛道吐槽"], ["supply", "补给评价"], ["photo", "照片分享"]].map(([id, label]) => `<button class="${state.feedTab === id ? "is-active" : ""}" type="button" data-feed-tab="${id}">${label}</button>`).join("")}
+          </div>
+          ${posts.map(post => {
+            const user = db.users.find(item => item.id === post.userId) || {};
+            return `
+              <article class="card feed-card">
+                <div class="feed-head">
+                  <span class="mini-avatar">${userInitial(user)}</span>
+                  <div><b>${safe(user.nickname || "跑友")}</b><span>${post.synthetic ? "虚拟样本" : "刚刚"}</span></div>
+                  ${tag(post.topic === "pb" ? "PB" : post.topic === "route" ? "赛道" : post.topic === "supply" ? "补给" : "照片", post.topic === "pb" ? "orange" : "")}
+                </div>
+                <p>${safe(post.content)}</p>
+                <div class="feed-actions"><span>赞 ${post.likes}</span><span>评论 ${post.comments}</span></div>
+              </article>
+            `;
+          }).join("") || `<div class="empty">这个话题还没人说话，发第一条。</div>`}
+          <form class="composer" data-form="post">
+            <input name="content" aria-label="分享你的赛后心情" placeholder="分享你的赛后心情...">
+            <button type="submit">发布</button>
+          </form>
+        </div>
+      `;
+    }
+
+    function renderProfile() {
+      const user = getCurrentUser();
+      const stats = userStats();
+      return `
+        <div class="stack">
+          <section class="card public-card">
+            <div class="runner-head">
+              <div class="avatar">${userInitial(user)}</div>
+              <div>
+                <h1>${safe(user.nickname)}的<br>跑马纪念册</h1>
+                <p class="muted" style="margin:8px 0 0;font-size:12px">${safe(user.motto || "每一场完赛，都值得被记住")}</p>
+              </div>
+            </div>
+            <div class="public-meta">
+              <div><b>${stats.fullPb ? stats.fullPb.time : "-"}</b><span>全马 PB</span></div>
+              <div><b>${stats.results.length}</b><span>完赛</span></div>
+              <div><b>${stats.cities.size}</b><span>城市</span></div>
+              <div><b>${stats.officialCount}</b><span>认证</span></div>
+            </div>
+          </section>
+          <div class="primary-actions">
+            <button class="action-btn" type="button" data-action="share-profile">复制分享链接</button>
+            <button class="ghost-btn" type="button" data-view="settings">编辑档案</button>
+          </div>
+          <div class="grid-2">
+            <button class="card metric-card" type="button" data-view="admin"><span>内测数据</span><b>${db.users.length}</b><small>用户样本</small></button>
+            <button class="card metric-card" type="button" data-view="feedback"><span>我要反馈</span><b>${db.feedback.length}</b><small>已收集反馈</small></button>
+          </div>
+          <section class="section-title"><h2>代表赛事</h2><span>按成绩排序</span></section>
+          <div class="stack">${stats.results.slice().sort((a,b) => a.seconds - b.seconds).slice(0, 3).map(result => raceRow(result)).join("") || `<div class="empty">添加完赛后自动展示代表赛事。</div>`}</div>
+        </div>
+      `;
+    }
+
+    function renderReport() {
+      const editingResult = state.editingResultId ? db.results.find(result => result.id === state.editingResultId) : null;
+      const event = editingResult ? (resultEvent(editingResult) || db.events[0]) : (db.events.find(item => item.id === state.selectedEventId) || db.events[0]);
+      const levelOptions = ["待补充档案", "大众精英", "大众一级", "大众二级", "未达标"];
+      const selectedDistance = editingResult?.distance || event.distance;
+      const selectedLevel = editingResult?.level || "待补充档案";
+      const isEditing = Boolean(editingResult);
+      return `
+        <form class="stack" data-form="result">
+          <section class="card form-card form-grid">
+            <input type="hidden" name="resultId" value="${safe(editingResult?.id || "")}">
+            <input type="hidden" name="ocrStatus" data-ocr-status value="${safe(isEditing ? "manual" : state.reportOcrStatus)}">
+            <input type="hidden" name="manualConfirmed" data-manual-confirmed value="${isEditing || state.reportManualConfirmed ? "true" : "false"}">
+            <div class="field score-upload">
+              <label>${isEditing ? "替换成绩单截图" : "上传成绩单截图"}</label>
+              <input name="file" type="file" accept="image/*,.pdf" data-score-file>
+              <small>${isEditing ? "不上传也可以直接修改下方字段。" : "先传成绩单；系统会读取赛事年份、城市、成绩、总排名、性别排名和年龄组排名。"}</small>
+            </div>
+            <div class="ocr-status" data-ocr-status-card data-status="${safe(isEditing ? "partial" : state.reportOcrStatus)}">${safe(isEditing ? "正在编辑已有完赛档案；修改后点击底部按钮更新。" : state.reportOcrMessage)}</div>
+            <div class="form-section">校对成绩 <span>OCR 会自动填，识别不到再手动补</span></div>
+            <div class="field">
+              <label>选择赛事</label>
+              <input name="eventQuery" data-event-query data-result-manual value="${safe(event.city)}" placeholder="输入赛事或城市，例如：咸宁 / 厦门 / 汉马" autocomplete="off">
+              <small>识别到 2026 年会优先匹配同城 2026 赛事；不会再用默认赛事代替。</small>
+            </div>
+            <div class="field">
+              <select name="eventId" data-result-event data-result-manual>
+                ${db.events.map(item => `<option value="${safe(item.id)}" ${item.id === event.id ? "selected" : ""}>${safe(item.name)} · ${safe(item.date)} · ${safe(item.city)}</option>`).join("")}
+              </select>
+            </div>
+            <div class="split">
+              <div class="field">
+                <label>项目</label>
+                <select name="distance" data-level-input>
+                  <option ${selectedDistance === "全马" ? "selected" : ""}>全马</option>
+                  <option ${selectedDistance === "半马" ? "selected" : ""}>半马</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>官方认证</label>
+                <select name="official">
+                  <option value="true" ${editingResult?.official !== false ? "selected" : ""}>已认证</option>
+                  <option value="false" ${editingResult?.official === false ? "selected" : ""}>待认证</option>
+                </select>
+              </div>
+            </div>
+            <div class="split">
+              <div class="field">
+                <label>完赛成绩</label>
+                <input name="time" inputmode="numeric" placeholder="3:28:15" required data-level-input value="${safe(editingResult?.time || "")}">
+              </div>
+              <div class="field">
+                <label>大众等级</label>
+                <select name="level">
+                  ${levelOptions.map(level => `<option ${level === selectedLevel ? "selected" : ""}>${safe(level)}</option>`).join("")}
+                </select>
+                <small>按跑者性别、出生日期、比赛日期和项目自动计算。</small>
+              </div>
+            </div>
+            <div class="field">
+              <label>总排名</label>
+              <input name="rank" placeholder="812 / 35000" value="${safe(editingResult?.rank || "")}">
+            </div>
+            <div class="split">
+              <div class="field">
+                <label>性别排名</label>
+                <input name="genderRank" placeholder="男子 216 / 8000" value="${safe(editingResult?.genderRank || "")}">
+              </div>
+              <div class="field">
+                <label>年龄组排名</label>
+                <input name="ageRank" placeholder="156 / 2341" value="${safe(editingResult?.ageRank || "")}">
+              </div>
+            </div>
+            <div class="form-section">可选素材 <span>传了会让海报和档案更丰富</span></div>
+            <div class="asset-upload-grid">
+              <div class="asset-upload">
+                <label>赛事路线图</label>
+                <input name="routeImage" type="file" accept="image/*" data-asset-file data-asset-type="routeImage">
+                <small>可替换海报里的路线区域</small>
+              </div>
+              <div class="asset-upload">
+                <label>参赛服</label>
+                <input name="shirtImage" type="file" accept="image/*" data-asset-file data-asset-type="shirtImage">
+                <small>用于纪念档案素材</small>
+              </div>
+              <div class="asset-upload">
+                <label>奖牌</label>
+                <input name="medalImage" type="file" accept="image/*" data-asset-file data-asset-type="medalImage">
+                <small>可替换海报奖牌图</small>
+              </div>
+              <div class="asset-upload">
+                <label>号码布</label>
+                <input name="bibImage" type="file" accept="image/*" data-asset-file data-asset-type="bibImage">
+                <small>用于后续完赛档案</small>
+              </div>
+            </div>
+            <div class="field">
+              <label>赛后感言</label>
+              <textarea name="note" placeholder="这场比赛最想记住什么？">${safe(editingResult?.note || "")}</textarea>
+            </div>
+            <button class="solid-btn" type="submit">${isEditing ? "更新赛事档案" : "保存到我的纪念册"}</button>
+          </section>
+        </form>
+      `;
+    }
+
+    function renderSettings() {
+      const user = getCurrentUser();
+      return `
+        <form class="card form-card form-grid" data-form="settings">
+          <div class="field"><label>昵称</label><input name="nickname" value="${safe(user.nickname)}" maxlength="16"></div>
+          <div class="split">
+            <div class="field"><label>常住城市</label><input name="homeCity" value="${safe(user.homeCity)}" maxlength="12"></div>
+            <div class="field"><label>跑龄</label><select name="runningYears">${Array.from({ length: 12 }, (_, index) => `<option value="${index + 1}" ${Number(user.runningYears) === index + 1 ? "selected" : ""}>${index + 1} 年</option>`).join("")}</select></div>
+          </div>
+          <div class="split">
+            <div class="field">
+              <label>性别</label>
+              <select name="gender">
+                <option value="" ${!user.gender ? "selected" : ""}>未填写</option>
+                <option value="male" ${normalizeGender(user.gender) === "male" ? "selected" : ""}>男</option>
+                <option value="female" ${normalizeGender(user.gender) === "female" ? "selected" : ""}>女</option>
+              </select>
+            </div>
+            <div class="field"><label>出生日期</label><input name="birthDate" type="date" value="${safe(user.birthDate || "")}"></div>
+          </div>
+          <div class="field">
+            <label>海报重点</label>
+            <select name="runnerGoal">
+              ${runnerGoals.map(goal => `<option value="${goal.id}" ${(user.runnerGoal || "pb") === goal.id ? "selected" : ""}>${goal.label} · ${goal.short}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field">
+            <label>跑者风格</label>
+            <select name="runnerStyle">
+              ${runnerStyles.map(style => `<option value="${style.id}" ${(user.runnerStyle || "zen") === style.id ? "selected" : ""}>${style.label}</option>`).join("")}
+            </select>
+          </div>
+          <div class="field"><label>签名</label><input name="motto" value="${safe(user.motto || "")}" maxlength="32"></div>
+          <div class="field"><label>公开主页</label><select name="publicProfile"><option value="true" ${user.publicProfile ? "selected" : ""}>公开</option><option value="false" ${!user.publicProfile ? "selected" : ""}>仅自己可见</option></select></div>
+          <button class="solid-btn" type="submit">保存档案</button>
+        </form>
+      `;
+    }
+
+    function renderPoster() {
+      const stats = userStats();
+      const result = stats.results.find(item => item.id === state.selectedResultId) || stats.fullPb || stats.halfPb || stats.results[0];
+      if (!result) return `<div class="empty">先添加一场完赛，再生成海报。</div><button class="solid-btn" type="button" data-view="report">去添加完赛</button>`;
+      const user = getCurrentUser();
+      const event = resultEvent(result) || {};
+      const goal = currentGoal(user);
+      const copy = posterCopyFor(result, user, goal);
+      const year = result.date.slice(0, 4);
+      const raceTitle = year;
+      const assets = result.assets || {};
+      const assetBadges = [
+        assets.routeImage ? "路线图" : "",
+        assets.shirtImage ? "参赛服" : "",
+        assets.medalImage ? "奖牌" : "",
+        assets.bibImage ? "号码布" : ""
+      ].filter(Boolean);
+      return `
+        <div class="stack">
+          <section class="card poster-card">
+            <div class="poster-stage">
+              <div class="poster-preview">
+                <span class="poster-kicker">生成完赛海报</span>
+                ${assets.routeImage?.dataUrl ? `
+                  <img class="poster-route-photo" src="${safe(assets.routeImage.dataUrl)}" alt="赛事路线图">
+                ` : `
+                  <svg class="poster-route" viewBox="0 0 160 120" aria-hidden="true">
+                    <path d="M10 90 C34 35 58 70 78 42 S118 18 146 34"></path>
+                    <circle cx="10" cy="90" r="6" fill="#35c875"></circle>
+                    <circle cx="146" cy="34" r="6" fill="#ff8b35"></circle>
+                  </svg>
+                `}
+                <div class="poster-main-copy">
+                  <h1>${safe(raceTitle)}<br>${safe(result.city)}马拉松</h1>
+                  <div class="poster-time">${safe(result.time)}</div>
+                  <div class="poster-subline">${safe(copy.title)} · ${safe(result.level)}</div>
+                  <p class="poster-foot">${safe(copy.line)}<br>${safe(copy.styleLine)}<br>${safe(copy.foot)}</p>
+                </div>
+                <div class="poster-stamp">${safe(event.city || result.city)}<br>${safe(year)}</div>
+                ${assets.medalImage?.dataUrl ? `<img class="poster-medal-photo" src="${safe(assets.medalImage.dataUrl)}" alt="完赛奖牌">` : `<div class="poster-medal-large" aria-hidden="true"></div>`}
+                ${assetBadges.length ? `<div class="poster-asset-row">${assetBadges.map(label => `<span>${safe(label)}已收录</span>`).join("")}</div>` : ""}
+                <div class="poster-template-row">
+                  ${runnerGoals.map(goalItem => `
+                    <button class="poster-template ${goal.id === goalItem.id ? "is-active" : ""}" type="button" data-poster-mode="${goalItem.id}">
+                      ${safe(goalItem.short)}
+                    </button>
+                  `).join("")}
+                </div>
+              </div>
+            </div>
+          </section>
+          <div class="primary-actions">
+            <button class="action-btn" type="button" data-action="save-poster">保存海报</button>
+            <button class="ghost-btn" type="button" data-action="share-profile">分享主页</button>
+          </div>
+          <div class="primary-actions">
+            <button class="ghost-btn" type="button" data-action="edit-result" data-result-id="${safe(result.id)}">编辑记录</button>
+            <button class="danger-btn" type="button" data-action="delete-result" data-result-id="${safe(result.id)}">删除记录</button>
+          </div>
+          <section class="card insight-card">
+            <b>当前模板：${safe(goal.label)}</b>
+            <p>${safe(goal.line)}风格会套用“${safe(styleById(user?.runnerStyle).label)}”的文案语气，让海报更适合快速发圈或剪短视频。</p>
+          </section>
+        </div>
+      `;
+    }
+
+    function renderAdmin() {
+      const realUsers = db.users.filter(user => !user.synthetic).length;
+      const realResults = db.results.filter(result => !result.synthetic).length;
+      const realPosts = db.posts.filter(post => !post.synthetic).length;
+      const realFeedback = db.feedback.filter(item => !item.synthetic).length;
+      return `
+        <div class="stack">
+          <div class="admin-grid">
+            <section class="card admin-card"><b>${db.users.length}</b><span>总用户 · 真实 ${realUsers}</span></section>
+            <section class="card admin-card"><b>${db.results.length}</b><span>完赛记录 · 真实 ${realResults}</span></section>
+            <section class="card admin-card"><b>${db.posts.length}</b><span>同场动态 · 真实 ${realPosts}</span></section>
+            <section class="card admin-card"><b>${db.feedback.length}</b><span>反馈 · 真实 ${realFeedback}</span></section>
+          </div>
+          <section class="card form-card">
+            <h3 style="margin:0 0 8px">当前模式</h3>
+            <p class="muted" style="margin:0;line-height:1.6">${storageText()}。线上部署后若 Netlify Blobs 函数可用，所有测试用户会共用数据；本地预览会自动使用浏览器存储。</p>
+          </section>
+          <button class="danger-btn" type="button" data-action="reset-local">重置本机内测数据</button>
+        </div>
+      `;
+    }
+
+    function renderFeedback() {
+      return `
+        <form class="card form-card form-grid" data-form="feedback">
+          <div class="field">
+            <label>反馈类型</label>
+            <select name="type">
+              <option>体验问题</option>
+              <option>功能建议</option>
+              <option>内容想法</option>
+              <option>数据问题</option>
+            </select>
+          </div>
+          <div class="field">
+            <label>具体内容</label>
+            <textarea name="content" placeholder="例如：成绩填报哪里麻烦、同场话题想怎么聊、主页哪里不想公开。" required></textarea>
+          </div>
+          <button class="solid-btn" type="submit">提交反馈</button>
+        </form>
+      `;
+    }
+
+    const renderers = {
+      loading: () => `<div class="loading">正在加载内测数据<br>如果线上 API 不可用，会自动切到本地模式</div>`,
+      register: renderRegister,
+      passport: renderPassport,
+      map: renderMap,
+      archive: renderArchive,
+      community: renderCommunity,
+      profile: renderProfile,
+      report: renderReport,
+      settings: renderSettings,
+      poster: renderPoster,
+      admin: renderAdmin,
+      feedback: renderFeedback
+    };
+
+    function render() {
+      destroyMap();
+      setTitle(state.view);
+      screen.innerHTML = (renderers[state.view] || renderers.passport)();
+      bindNav();
+      if (state.view === "map") setTimeout(initMap, 0);
+    }
+
+    async function fetchRemoteState() {
+      const response = await fetch(API_URL, { headers: { "accept": "application/json" } });
+      if (!response.ok) throw new Error(`api_${response.status}`);
+      return response.json();
+    }
+
+    function localState() {
+      try {
+        const stored = localStorage.getItem(LOCAL_KEY);
+        return stored ? JSON.parse(stored) : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function saveLocal() {
+      localStorage.setItem(LOCAL_KEY, JSON.stringify(db));
+    }
+
+    function mergeById(remoteList = [], localList = [], deletedIds = new Set()) {
+      const merged = new Map();
+      remoteList.forEach(item => {
+        if (!deletedIds.has(item.id)) merged.set(item.id, item);
+      });
+      localList.forEach(item => {
+        if (!deletedIds.has(item.id)) merged.set(item.id, item);
+      });
+      return [...merged.values()];
+    }
+
+    function mergeStates(remote, local) {
+      if (!remote) return local;
+      const deletedIds = new Set([...(remote.deletedResultIds || []), ...(local.deletedResultIds || [])]);
+      return normalizeBetaState({
+        ...remote,
+        ...local,
+        deletedResultIds: [...deletedIds],
+        events: mergeById(remote.events, local.events),
+        users: mergeById(remote.users, local.users),
+        results: mergeById(remote.results, local.results, deletedIds),
+        posts: mergeById(remote.posts, local.posts),
+        feedback: mergeById(remote.feedback, local.feedback)
+      });
+    }
+
+    async function persist() {
+      db.savedAt = new Date().toISOString();
+      saveLocal();
+      try {
+        const latest = await fetchRemoteState();
+        const merged = mergeStates(latest.state, db);
+        const response = await fetch(API_URL, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ action: "replace", state: merged })
+        });
+        if (!response.ok) throw new Error(`save_${response.status}`);
+        const payload = await response.json();
+        db = payload.state || merged;
+        state.storageMode = "shared";
+        saveLocal();
+      } catch {
+        state.storageMode = "local";
+      }
+    }
+
+    function parseTime(value) {
+      const parts = String(value).trim().split(":").map(Number);
+      if (parts.length !== 3 || parts.some(Number.isNaN)) return null;
+      return parts[0] * 3600 + parts[1] * 60 + parts[2];
+    }
+
+    async function bootstrap() {
+      state.view = "loading";
+      render();
+      try {
+        const remote = await fetchRemoteState();
+        if (remote.state) {
+          db = normalizeBetaState(remote.state);
+          state.storageMode = "shared";
+        } else {
+          db = normalizeBetaState(localState() || generateSeed());
+          state.storageMode = "shared";
+          await persist();
+        }
+      } catch {
+        db = normalizeBetaState(localState() || generateSeed());
+        state.storageMode = "local";
+      }
+      saveLocal();
+      const session = localStorage.getItem(SESSION_KEY);
+      if (session && db.users.some(user => user.id === session)) state.currentUserId = session;
+      const path = window.location.pathname;
+      const publicMatch = path.match(/^\/u\/([^/]+)/);
+      if (publicMatch) {
+        const publicUser = db.users.find(user => user.slug === publicMatch[1]);
+        if (publicUser) state.publicUserId = publicUser.id;
+      }
+      state.view = state.currentUserId ? "passport" : "register";
+      render();
+    }
+
+    document.addEventListener("submit", async event => {
+      const form = event.target.closest("form");
+      if (!form) return;
+      event.preventDefault();
+      const values = Object.fromEntries(new FormData(form).entries());
+
+      if (form.dataset.form === "register") {
+        const code = String(values.invite || "").trim().toUpperCase();
+        if (!INVITE_CODES.includes(code)) {
+          showToast("邀请码不对，先用 RUN2026");
+          return;
+        }
+        const nickname = String(values.nickname || "").trim();
+        if (!nickname) {
+          showToast("先填一个跑者昵称");
+          return;
+        }
+        if (!values.gender || !values.birthDate) {
+          showToast("性别和出生日期用于自动计算大众等级");
+          return;
+        }
+        const user = {
+          id: uid("real_user"),
+          slug: `${nickname.toLowerCase().replace(/[^a-z0-9\u4e00-\u9fa5]+/g, "-")}-${Math.random().toString(36).slice(2, 6)}`,
+          nickname,
+          homeCity: String(values.homeCity || "武汉").trim(),
+          gender: String(values.gender || "").trim(),
+          birthDate: String(values.birthDate || "").trim(),
+          runningYears: Number(values.runningYears || 1),
+          runnerGoal: String(values.runnerGoal || "pb"),
+          runnerStyle: String(values.runnerStyle || "zen"),
+          motto: String(values.motto || "每一场完赛，都值得被记住").trim(),
+          publicProfile: true,
+          synthetic: false,
+          createdAt: new Date().toISOString()
+        };
+        db.users.unshift(user);
+        state.currentUserId = user.id;
+        localStorage.setItem(SESSION_KEY, user.id);
+        persist();
+        showToast("护照已建立");
+        navigate("passport", { push: false });
+        return;
+      }
+
+      if (!state.currentUserId) return;
+
+      if (form.dataset.form === "settings") {
+        const user = getCurrentUser();
+        user.nickname = String(values.nickname || user.nickname).trim();
+        user.homeCity = String(values.homeCity || user.homeCity).trim();
+        user.gender = String(values.gender || "").trim();
+        user.birthDate = String(values.birthDate || "").trim();
+        user.runningYears = Number(values.runningYears || user.runningYears);
+        user.runnerGoal = String(values.runnerGoal || user.runnerGoal || "pb");
+        user.runnerStyle = String(values.runnerStyle || user.runnerStyle || "zen");
+        user.motto = String(values.motto || "").trim();
+        user.publicProfile = values.publicProfile === "true";
+        persist();
+        showToast("档案已保存");
+        navigate("profile");
+        return;
+      }
+
+      if (form.dataset.form === "result") {
+        if (values.ocrStatus === "reading") {
+          showToast("成绩单仍在识别，请稍后再保存");
+          return;
+        }
+        const hasScoreFile = Boolean(form.querySelector("[data-score-file]")?.files?.length);
+        if (hasScoreFile && values.ocrStatus !== "verified" && values.manualConfirmed !== "true") {
+          showToast("OCR 未确认赛事，请手动选择赛事后再保存");
+          return;
+        }
+        const typedEvent = findEventFromText(values.eventQuery);
+        const eventInfo = typedEvent || db.events.find(item => item.id === values.eventId) || db.events[0];
+        const seconds = parseTime(values.time);
+        if (!seconds) {
+          showToast("成绩格式请写成 3:28:15");
+          return;
+        }
+        const distance = String(values.distance || eventInfo.distance);
+        const km = distance === "半马" ? 21.0975 : 42.195;
+        const editingIndex = values.resultId ? db.results.findIndex(item => item.id === values.resultId) : -1;
+        const existingResult = editingIndex >= 0 ? db.results[editingIndex] : null;
+        const previousBest = bestResult(userResults().filter(item => item.id !== existingResult?.id), distance);
+        const calculatedLevel = roadLevelFor(seconds, distance, getCurrentUser(), eventInfo.date);
+        const resultAssets = await readResultAssets(form);
+        const mergedAssets = Object.keys(resultAssets).length ? { ...(existingResult?.assets || {}), ...resultAssets } : (existingResult?.assets || {});
+        const result = {
+          id: existingResult?.id || uid("real_result"),
+          userId: state.currentUserId,
+          eventId: eventInfo.id,
+          eventName: eventInfo.name,
+          city: eventInfo.city,
+          date: eventInfo.date,
+          distance,
+          seconds,
+          time: secondsToTime(seconds),
+          pace: pace(seconds, km),
+          rank: String(values.rank || `- / ${eventInfo.capacity}`),
+          genderRank: String(values.genderRank || "-"),
+          ageRank: String(values.ageRank || "-"),
+          level: calculatedLevel === "待补充档案" ? String(values.level || calculatedLevel) : calculatedLevel,
+          official: values.official === "true",
+          pb: !previousBest || seconds < previousBest.seconds,
+          medal: existingResult?.medal || "gold",
+          source: values.ocrStatus === "verified" ? "ocr" : "manual",
+          assets: mergedAssets,
+          note: String(values.note || "").trim(),
+          synthetic: false,
+          createdAt: existingResult?.createdAt || new Date().toISOString(),
+          updatedAt: existingResult ? new Date().toISOString() : undefined
+        };
+        if (existingResult) {
+          db.results.splice(editingIndex, 1, result);
+        } else {
+          db.results.unshift(result);
+        }
+        state.selectedEventId = result.eventId;
+        state.selectedResultId = result.id;
+        state.editingResultId = null;
+        state.reportOcrStatus = "idle";
+        state.reportOcrMessage = "先上传成绩单截图；系统会读取赛事、成绩和排名，下面字段只做校对补充。";
+        state.reportManualConfirmed = false;
+        persist();
+        showToast(existingResult ? "赛事档案已更新" : "已保存到纪念册");
+        navigate("archive");
+        return;
+      }
+
+      if (form.dataset.form === "post") {
+        const content = String(values.content || "").trim();
+        if (!content) return;
+        db.posts.unshift({
+          id: uid("real_post"),
+          userId: state.currentUserId,
+          eventId: state.selectedEventId,
+          topic: state.feedTab === "all" ? "pb" : state.feedTab,
+          content,
+          likes: 0,
+          comments: 0,
+          synthetic: false,
+          createdAt: new Date().toISOString()
+        });
+        form.reset();
+        persist();
+        showToast("已发布到同场话题");
+        render();
+        return;
+      }
+
+      if (form.dataset.form === "feedback") {
+        const content = String(values.content || "").trim();
+        if (!content) return;
+        db.feedback.unshift({
+          id: uid("real_feedback"),
+          userId: state.currentUserId,
+          type: String(values.type || "体验问题"),
+          content,
+          synthetic: false,
+          createdAt: new Date().toISOString()
+        });
+        persist();
+        showToast("反馈已提交");
+        navigate("profile");
+      }
+    });
+
+    document.addEventListener("change", event => {
+      const eventSelect = event.target.closest("[data-select-event]");
+      if (eventSelect) {
+        state.selectedEventId = eventSelect.value;
+        render();
+        return;
+      }
+      const resultEvent = event.target.closest("[data-result-event]");
+      if (resultEvent) {
+        const form = resultEvent.closest("form");
+        const eventInfo = db.events.find(item => item.id === resultEvent.value);
+        state.reportTouched = true;
+        markReportManualConfirmed(form);
+        applyEventToReportForm(form, eventInfo);
+        return;
+      }
+      const levelInput = event.target.closest("[data-level-input]");
+      if (levelInput) {
+        updateLevelFromForm(levelInput.closest("form"));
+        return;
+      }
+      const scoreFile = event.target.closest("[data-score-file]");
+      if (scoreFile && scoreFile.files.length) {
+        const form = scoreFile.closest("form");
+        extractResultFromImage(scoreFile.files[0], form);
+      }
+    });
+
+    document.addEventListener("input", event => {
+      const manualField = event.target.closest("[data-result-manual]");
+      if (manualField) markReportManualConfirmed(manualField.closest("form"));
+      const levelInput = event.target.closest("[data-level-input]");
+      if (levelInput) updateLevelFromForm(levelInput.closest("form"));
+      const query = event.target.closest("[data-event-query]");
+      if (!query) return;
+      state.reportTouched = true;
+      const matched = findEventFromText(query.value);
+      if (!matched || matched.id === state.selectedEventId) return;
+      const form = query.closest("form");
+      state.selectedEventId = matched.id;
+      if (form?.eventId) form.eventId.value = matched.id;
+      if (form?.distance) form.distance.value = matched.distance;
+      updateLevelFromForm(form);
+    });
+
+    document.addEventListener("click", async event => {
+      const tabButton = event.target.closest("[data-tab]");
+      if (tabButton) {
+        state.history = [];
+        navigate(tabButton.dataset.tab);
+        return;
+      }
+      const viewButton = event.target.closest("[data-view]");
+      if (viewButton) {
+        if (viewButton.dataset.resultId) state.selectedResultId = viewButton.dataset.resultId;
+        if (viewButton.dataset.view === "report") {
+          state.editingResultId = null;
+          state.reportManualConfirmed = false;
+          state.reportOcrStatus = "idle";
+          state.reportOcrMessage = "先上传成绩单截图；系统会读取赛事、成绩和排名，下面字段只做校对补充。";
+        }
+        navigate(viewButton.dataset.view);
+        return;
+      }
+      const mapFilter = event.target.closest("[data-map-filter]");
+      if (mapFilter) {
+        state.mapFilter = mapFilter.dataset.mapFilter;
+        render();
+        return;
+      }
+      const archiveFilter = event.target.closest("[data-archive-filter]");
+      if (archiveFilter) {
+        state.archiveFilter = archiveFilter.dataset.archiveFilter;
+        render();
+        return;
+      }
+      const feedTab = event.target.closest("[data-feed-tab]");
+      if (feedTab) {
+        state.feedTab = feedTab.dataset.feedTab;
+        render();
+        return;
+      }
+      const posterMode = event.target.closest("[data-poster-mode]");
+      if (posterMode) {
+        state.posterMode = posterMode.dataset.posterMode;
+        render();
+        showToast(`已切换到${posterMode.textContent.trim()}模板`);
+        return;
+      }
+      const action = event.target.closest("[data-action]");
+      if (!action) return;
+      const type = action.dataset.action;
+      if (type === "quick-feedback") {
+        if (state.currentUserId) navigate("feedback");
+        return;
+      }
+      if (type === "share-profile") {
+        const user = getCurrentUser();
+        const url = `${window.location.origin}/u/${user.slug}`;
+        try {
+          await navigator.clipboard.writeText(url);
+          showToast("分享链接已复制");
+        } catch {
+          showToast(url);
+        }
+        return;
+      }
+      if (type === "save-poster") {
+        showToast("内测版已生成海报预览");
+        return;
+      }
+      if (type === "edit-result") {
+        const result = db.results.find(item => item.id === action.dataset.resultId);
+        if (!result) return;
+        state.editingResultId = result.id;
+        state.selectedResultId = result.id;
+        state.selectedEventId = result.eventId;
+        state.reportManualConfirmed = true;
+        navigate("report");
+        return;
+      }
+      if (type === "delete-result") {
+        const result = db.results.find(item => item.id === action.dataset.resultId);
+        if (!result) return;
+        if (!window.confirm(`删除「${result.eventName}」这条完赛档案？`)) return;
+        db.results = db.results.filter(item => item.id !== result.id);
+        db.deletedResultIds = [...new Set([...(db.deletedResultIds || []), result.id])];
+        state.selectedResultId = null;
+        state.editingResultId = null;
+        persist();
+        showToast("赛事档案已删除");
+        navigate("archive", { push: false });
+        return;
+      }
+      if (type === "reset-local") {
+        localStorage.removeItem(LOCAL_KEY);
+        localStorage.removeItem(SESSION_KEY);
+        db = normalizeBetaState(generateSeed());
+        state.currentUserId = null;
+        state.storageMode = "local";
+        state.posterMode = "auto";
+        saveLocal();
+        showToast("本机数据已重置");
+        navigate("register", { push: false });
+      }
+    });
+
+    backBtn.addEventListener("click", goBack);
+    screen.addEventListener("scroll", () => topbar.classList.toggle("is-raised", screen.scrollTop > 8));
+    window.addEventListener("leaflet-ready", () => {
+      if (state.view === "map") initMap();
+    });
+
+    bootstrap();
+  </script>
+</body>
+</html>

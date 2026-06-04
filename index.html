@@ -1,0 +1,2285 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>马拉松电子纪念册 Demo</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg: #050706;
+      --panel: #0d1210;
+      --panel-2: #121916;
+      --panel-3: #17201c;
+      --line: rgba(255, 255, 255, 0.09);
+      --text: #f6f1e8;
+      --muted: #9ca79f;
+      --weak: #68736c;
+      --orange: #f36a17;
+      --orange-2: #ff8b35;
+      --gold: #dbb171;
+      --blue: #4b95ff;
+      --green: #35c875;
+      --danger: #e85a4f;
+      --radius: 8px;
+      --shadow: 0 18px 60px rgba(0, 0, 0, 0.44);
+      font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      min-height: 100%;
+      margin: 0;
+      background:
+        radial-gradient(circle at 16% 0%, rgba(243, 106, 23, 0.18), transparent 28rem),
+        radial-gradient(circle at 90% 12%, rgba(75, 149, 255, 0.10), transparent 24rem),
+        #020302;
+      color: var(--text);
+    }
+
+    body {
+      overflow-x: hidden;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: geometricPrecision;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      border: 0;
+      color: inherit;
+      background: none;
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .app {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 100svh;
+      width: min(100%, 430px);
+      margin: 0 auto;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.04), transparent 16rem),
+        var(--bg);
+      box-shadow: var(--shadow);
+    }
+
+    @media (min-width: 700px) {
+      body {
+        padding: 18px 0;
+      }
+
+      .app {
+        min-height: calc(100svh - 36px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        border-radius: 24px;
+      }
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: 44px 1fr 44px;
+      align-items: center;
+      min-height: calc(54px + env(safe-area-inset-top));
+      padding: env(safe-area-inset-top) 10px 0;
+      background: rgba(5, 7, 6, 0.82);
+      border-bottom: 1px solid transparent;
+      backdrop-filter: blur(18px);
+    }
+
+    .topbar.is-raised {
+      border-bottom-color: rgba(255, 255, 255, 0.08);
+    }
+
+    .icon-btn {
+      display: inline-grid;
+      place-items: center;
+      width: 40px;
+      height: 40px;
+      border-radius: 999px;
+      color: var(--text);
+    }
+
+    .icon-btn:active {
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    .back-btn[hidden] {
+      display: inline-grid;
+      visibility: hidden;
+      pointer-events: none;
+    }
+
+    .titlebox {
+      min-width: 0;
+      text-align: center;
+      line-height: 1.25;
+    }
+
+    .titlebox b {
+      display: block;
+      overflow: hidden;
+      font-size: 16px;
+      font-weight: 800;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .titlebox span {
+      display: block;
+      margin-top: 2px;
+      overflow: hidden;
+      color: var(--muted);
+      font-size: 11px;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .screen {
+      flex: 1;
+      min-height: 0;
+      padding: 14px 14px 94px;
+      overflow: auto;
+      overscroll-behavior-y: contain;
+    }
+
+    .tabbar {
+      position: fixed;
+      right: max(0px, calc((100vw - 430px) / 2));
+      bottom: 0;
+      left: max(0px, calc((100vw - 430px) / 2));
+      z-index: 30;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 2px;
+      width: min(100%, 430px);
+      margin: 0 auto;
+      padding: 8px 10px calc(8px + env(safe-area-inset-bottom));
+      background: rgba(9, 12, 11, 0.92);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      backdrop-filter: blur(20px);
+    }
+
+    .tabbar button {
+      display: grid;
+      justify-items: center;
+      gap: 4px;
+      min-width: 0;
+      padding: 6px 2px 4px;
+      border-radius: 8px;
+      color: var(--muted);
+      font-size: 11px;
+      white-space: nowrap;
+    }
+
+    .tabbar button::before {
+      content: "";
+      width: 20px;
+      height: 20px;
+      border: 2px solid currentColor;
+      border-radius: 7px;
+      opacity: 0.72;
+    }
+
+    .tabbar button[data-tab="map"]::before {
+      border-radius: 999px;
+    }
+
+    .tabbar button[data-tab="archive"]::before {
+      width: 18px;
+      border-radius: 4px;
+      box-shadow: inset 0 5px 0 rgba(255, 255, 255, 0.16);
+    }
+
+    .tabbar button[data-tab="community"]::before {
+      border-radius: 999px 999px 999px 4px;
+    }
+
+    .tabbar button[data-tab="profile"]::before {
+      width: 18px;
+      border-radius: 999px 999px 7px 7px;
+    }
+
+    .tabbar button.is-active {
+      color: var(--orange);
+      background: rgba(243, 106, 23, 0.09);
+    }
+
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 12px;
+      margin: 8px 0 0;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.055), rgba(255, 255, 255, 0.02)),
+        var(--panel);
+    }
+
+    .soft-card {
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .hero-card {
+      position: relative;
+      min-height: 178px;
+      padding: 18px 16px 16px;
+      background:
+        linear-gradient(100deg, rgba(5, 7, 6, 0.94) 0%, rgba(5, 7, 6, 0.72) 52%, rgba(5, 7, 6, 0.18)),
+        linear-gradient(135deg, rgba(37, 55, 48, 0.95), rgba(8, 12, 11, 0.96));
+    }
+
+    .hero-card::after {
+      content: "";
+      position: absolute;
+      right: -36px;
+      bottom: -38px;
+      width: 185px;
+      height: 185px;
+      border: 2px solid rgba(219, 177, 113, 0.26);
+      border-radius: 999px;
+      background:
+        radial-gradient(circle, transparent 48%, rgba(219, 177, 113, 0.18) 49%, transparent 51%),
+        repeating-conic-gradient(from -18deg, rgba(219, 177, 113, 0.22) 0deg 7deg, transparent 7deg 15deg);
+      opacity: 0.68;
+      transform: rotate(-14deg);
+    }
+
+    .runner-head {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 72px 1fr;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .avatar {
+      width: 72px;
+      height: 72px;
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 999px;
+      background:
+        linear-gradient(180deg, transparent, rgba(0, 0, 0, 0.12)),
+        url("assets/memorial-ui-01-passport-home.jpg") center 10% / 285% auto;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
+    }
+
+    .runner-head h1,
+    .public-card h1 {
+      margin: 0;
+      font-size: 25px;
+      line-height: 1.1;
+    }
+
+    .runner-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 8px;
+    }
+
+    .tag,
+    .mini-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      border-radius: 999px;
+      white-space: nowrap;
+    }
+
+    .tag {
+      padding: 5px 9px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #e7ded0;
+      font-size: 12px;
+    }
+
+    .tag.orange {
+      background: rgba(243, 106, 23, 0.16);
+      color: #ff9c56;
+    }
+
+    .tag.blue {
+      background: rgba(75, 149, 255, 0.16);
+      color: #91bfff;
+    }
+
+    .tag.green {
+      background: rgba(53, 200, 117, 0.14);
+      color: #7be0a6;
+    }
+
+    .tag.gold {
+      background: rgba(219, 177, 113, 0.16);
+      color: #f1ca8e;
+    }
+
+    .passport-stats {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      margin-top: 18px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: var(--radius);
+      background: rgba(0, 0, 0, 0.16);
+    }
+
+    .passport-stats div {
+      min-width: 0;
+      padding: 12px 8px;
+      border-right: 1px solid rgba(255, 255, 255, 0.08);
+      text-align: center;
+    }
+
+    .passport-stats div:last-child {
+      border-right: 0;
+    }
+
+    .passport-stats b {
+      display: block;
+      overflow-wrap: anywhere;
+      color: var(--gold);
+      font-size: 21px;
+      line-height: 1.1;
+    }
+
+    .passport-stats span {
+      display: block;
+      margin-top: 5px;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .metric-card {
+      padding: 14px;
+    }
+
+    .metric-card span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .metric-card b {
+      display: block;
+      margin-top: 5px;
+      color: var(--orange);
+      font-size: 29px;
+      line-height: 1;
+    }
+
+    .metric-card small {
+      display: block;
+      margin-top: 7px;
+      color: #b7c0b9;
+      font-size: 12px;
+    }
+
+    .race-card {
+      display: grid;
+      grid-template-columns: 1fr 78px;
+      gap: 12px;
+      padding: 13px;
+      text-align: left;
+      width: 100%;
+    }
+
+    .race-card h3,
+    .race-row h3,
+    .feed-card h3 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .race-card p,
+    .race-row p,
+    .feed-card p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.45;
+    }
+
+    .race-time {
+      margin-top: 8px;
+      color: var(--orange);
+      font-size: 24px;
+      font-weight: 850;
+      line-height: 1;
+    }
+
+    .medal {
+      align-self: center;
+      width: 72px;
+      height: 72px;
+      border-radius: 999px;
+      background:
+        radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.45), transparent 16%),
+        radial-gradient(circle at 50% 56%, #a77939 0 32%, #5a351b 33% 36%, #d4a45e 37% 56%, #7b4d24 58% 100%);
+      box-shadow: inset 0 0 0 4px rgba(255, 231, 180, 0.18), 0 10px 24px rgba(0, 0, 0, 0.34);
+    }
+
+    .medal.silver {
+      filter: grayscale(0.9) brightness(1.16);
+    }
+
+    .medal.small {
+      width: 54px;
+      height: 54px;
+    }
+
+    .medal.ribbon::before {
+      content: "";
+      display: block;
+      width: 24px;
+      height: 22px;
+      margin: -18px auto 0;
+      border-radius: 3px 3px 0 0;
+      background: linear-gradient(90deg, #cf5a28 0 34%, #2d6cbd 34% 66%, #cf5a28 66%);
+    }
+
+    .primary-actions {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .action-btn,
+    .ghost-btn,
+    .solid-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      padding: 0 14px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .action-btn,
+    .solid-btn {
+      background: linear-gradient(135deg, var(--orange), #f47f1d);
+      color: #fff7ed;
+      box-shadow: 0 10px 26px rgba(243, 106, 23, 0.22);
+    }
+
+    .ghost-btn {
+      border: 1px solid rgba(243, 106, 23, 0.45);
+      color: #ff9d55;
+      background: rgba(243, 106, 23, 0.08);
+    }
+
+    .h-scroll {
+      display: grid;
+      grid-auto-columns: minmax(126px, 40%);
+      grid-auto-flow: column;
+      gap: 10px;
+      margin: 0 -14px;
+      padding: 0 14px 2px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      scroll-snap-type: x proximity;
+    }
+
+    .h-scroll::-webkit-scrollbar {
+      display: none;
+    }
+
+    .city-tile,
+    .mini-race {
+      scroll-snap-align: start;
+      min-height: 116px;
+      padding: 12px;
+      text-align: left;
+    }
+
+    .mini-race {
+      display: grid;
+      align-content: end;
+      position: relative;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.72)),
+        linear-gradient(135deg, #293931, #0a0d0c);
+    }
+
+    .mini-race::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      opacity: 0.22;
+      background: var(--bg-image, none) center / cover;
+    }
+
+    .mini-race > * {
+      position: relative;
+      z-index: 1;
+    }
+
+    .mini-race b,
+    .city-tile b {
+      display: block;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .mini-race span,
+    .city-tile span {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .chips {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+      scrollbar-width: none;
+    }
+
+    .chips::-webkit-scrollbar {
+      display: none;
+    }
+
+    .chip {
+      flex: 0 0 auto;
+      padding: 8px 13px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .chip.is-active {
+      border-color: rgba(243, 106, 23, 0.55);
+      color: #fff;
+      background: rgba(243, 106, 23, 0.18);
+    }
+
+    .map-card {
+      position: relative;
+      padding: 8px;
+      background:
+        radial-gradient(circle at 58% 50%, rgba(243, 106, 23, 0.12), transparent 8rem),
+        radial-gradient(circle at 42% 56%, rgba(75, 149, 255, 0.12), transparent 9rem),
+        #07100f;
+    }
+
+    .interactive-map {
+      position: relative;
+      height: min(68svh, 420px);
+      min-height: 330px;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        #07110f;
+      background-size: 28px 28px;
+      isolation: isolate;
+    }
+
+    .interactive-map::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: 500;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 72% 42%, rgba(243, 106, 23, 0.16), transparent 8rem),
+        linear-gradient(180deg, rgba(0, 0, 0, 0.08), rgba(0, 0, 0, 0.24));
+      mix-blend-mode: screen;
+      opacity: 0.65;
+    }
+
+    .leaflet-container {
+      font: inherit;
+      background: #07110f;
+    }
+
+    .leaflet-control-zoom {
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.12) !important;
+      border-radius: 8px !important;
+      background: rgba(8, 12, 11, 0.82);
+      box-shadow: 0 10px 28px rgba(0, 0, 0, 0.34);
+      backdrop-filter: blur(16px);
+    }
+
+    .leaflet-control-zoom a {
+      width: 34px !important;
+      height: 34px !important;
+      border: 0 !important;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.10) !important;
+      color: #f4efe7 !important;
+      background: rgba(255, 255, 255, 0.04) !important;
+      line-height: 34px !important;
+    }
+
+    .leaflet-control-zoom a:last-child {
+      border-bottom: 0 !important;
+    }
+
+    .leaflet-control-attribution {
+      max-width: 210px;
+      border-radius: 999px 0 0 0;
+      background: rgba(5, 7, 6, 0.68) !important;
+      color: rgba(255, 255, 255, 0.56) !important;
+      font-size: 9px;
+    }
+
+    .leaflet-control-attribution a {
+      color: rgba(255, 255, 255, 0.72) !important;
+    }
+
+    .leaflet-popup-content-wrapper,
+    .leaflet-popup-tip {
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      background: rgba(12, 17, 15, 0.94);
+      color: var(--text);
+      box-shadow: 0 14px 42px rgba(0, 0, 0, 0.42);
+    }
+
+    .leaflet-popup-content-wrapper {
+      border-radius: 8px;
+      backdrop-filter: blur(16px);
+    }
+
+    .leaflet-popup-content {
+      margin: 12px 13px;
+      min-width: 150px;
+    }
+
+    .leaflet-popup-close-button {
+      color: rgba(255, 255, 255, 0.58) !important;
+    }
+
+    .map-popup h3 {
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .map-popup p {
+      margin: 5px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .map-popup b {
+      color: var(--orange);
+      font-size: 18px;
+    }
+
+    .footprint-marker {
+      position: relative;
+      display: grid;
+      place-items: center;
+      width: var(--marker-size);
+      height: var(--marker-size);
+      border: 2px solid rgba(255, 255, 255, 0.72);
+      border-radius: 999px;
+      background: var(--marker-color);
+      box-shadow:
+        0 0 0 8px color-mix(in srgb, var(--marker-color) 18%, transparent),
+        0 0 26px color-mix(in srgb, var(--marker-color) 72%, transparent),
+        0 10px 24px rgba(0, 0, 0, 0.34);
+      transform: translate3d(0, 0, 0);
+    }
+
+    .footprint-marker::after {
+      content: "";
+      width: 42%;
+      height: 42%;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.82);
+      opacity: 0.6;
+    }
+
+    .footprint-marker.is-muted {
+      opacity: 0.28;
+      filter: grayscale(0.8);
+    }
+
+    .marker-label {
+      position: absolute;
+      top: calc(100% + 6px);
+      left: 50%;
+      padding: 3px 6px;
+      border-radius: 999px;
+      background: rgba(5, 7, 6, 0.72);
+      color: #fff7ed;
+      font-size: 11px;
+      font-weight: 800;
+      line-height: 1;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.95);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .marker-label.pos-left {
+      top: 50%;
+      right: calc(100% + 6px);
+      left: auto;
+      transform: translateY(-50%);
+    }
+
+    .marker-label.pos-right {
+      top: 50%;
+      left: calc(100% + 6px);
+      transform: translateY(-50%);
+    }
+
+    .marker-label.pos-top {
+      top: auto;
+      bottom: calc(100% + 6px);
+    }
+
+    .map-fallback {
+      position: absolute;
+      inset: 0;
+    }
+
+    .map-wrap {
+      position: relative;
+      aspect-ratio: 1.14 / 1;
+      width: 100%;
+      height: 100%;
+      border-radius: var(--radius);
+      overflow: hidden;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px),
+        #07110f;
+      background-size: 28px 28px;
+    }
+
+    .map-svg {
+      position: absolute;
+      inset: 9px;
+      width: calc(100% - 18px);
+      height: calc(100% - 18px);
+    }
+
+    .map-svg path {
+      fill: rgba(255, 255, 255, 0.045);
+      stroke: rgba(219, 177, 113, 0.46);
+      stroke-width: 2;
+    }
+
+    .city-dot {
+      position: absolute;
+      display: grid;
+      place-items: center;
+      width: var(--size, 16px);
+      height: var(--size, 16px);
+      margin: calc(var(--size, 16px) / -2) 0 0 calc(var(--size, 16px) / -2);
+      border: 2px solid rgba(255, 255, 255, 0.65);
+      border-radius: 999px;
+      background: var(--dot, var(--orange));
+      box-shadow: 0 0 0 7px color-mix(in srgb, var(--dot, var(--orange)) 18%, transparent), 0 0 24px color-mix(in srgb, var(--dot, var(--orange)) 60%, transparent);
+    }
+
+    .city-dot span {
+      position: absolute;
+      top: calc(100% + 5px);
+      left: 50%;
+      color: #f8f1e8;
+      font-size: 11px;
+      font-weight: 700;
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.92);
+      transform: translateX(-50%);
+      white-space: nowrap;
+    }
+
+    .map-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      padding: 10px 2px 2px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      margin-right: 5px;
+      border-radius: 999px;
+      background: var(--dot, var(--orange));
+    }
+
+    .stat-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .stat-strip div {
+      padding: 12px 8px;
+      background: rgba(255, 255, 255, 0.04);
+      text-align: center;
+    }
+
+    .stat-strip b {
+      display: block;
+      color: var(--gold);
+      font-size: 23px;
+    }
+
+    .stat-strip span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .city-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 9px;
+    }
+
+    .city-tile {
+      min-height: 94px;
+      border-radius: var(--radius);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.07), rgba(255, 255, 255, 0.02)),
+        #0d1412;
+      text-align: center;
+    }
+
+    .city-tile strong {
+      display: block;
+      margin-top: 10px;
+      color: var(--gold);
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 40px;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .search {
+      display: flex;
+      align-items: center;
+      min-height: 40px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.05);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .year-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin: 12px 2px 4px;
+      color: var(--text);
+    }
+
+    .year-head b {
+      font-size: 19px;
+    }
+
+    .year-head span {
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .race-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .race-row {
+      display: grid;
+      grid-template-columns: 60px 1fr auto;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      padding: 10px;
+      text-align: left;
+    }
+
+    .race-row .race-time {
+      margin-top: 6px;
+      font-size: 23px;
+    }
+
+    .row-action {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .finish-hero {
+      position: relative;
+      min-height: 170px;
+      padding: 16px;
+      background:
+        linear-gradient(180deg, rgba(0, 0, 0, 0.2), rgba(0, 0, 0, 0.76)),
+        url("assets/memorial-ui-04-finish-memory.jpg") center 20% / 155% auto,
+        linear-gradient(135deg, #26362f, #0b0e0d);
+    }
+
+    .finish-hero h1 {
+      margin: 48px 0 5px;
+      font-size: 23px;
+      line-height: 1.1;
+    }
+
+    .finish-hero p {
+      margin: 0;
+      color: #d4dbd6;
+      font-size: 12px;
+    }
+
+    .big-result {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 1px;
+      overflow: hidden;
+      background: var(--line);
+    }
+
+    .big-result div {
+      padding: 14px;
+      background: rgba(255, 255, 255, 0.035);
+    }
+
+    .big-result span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .big-result b {
+      display: block;
+      margin-top: 4px;
+      color: var(--orange);
+      font-size: 30px;
+      line-height: 1;
+    }
+
+    .big-result strong {
+      display: block;
+      margin-top: 4px;
+      color: var(--text);
+      font-size: 25px;
+    }
+
+    .seg-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, 0.04);
+    }
+
+    .seg-tabs button {
+      min-height: 39px;
+      border-right: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .seg-tabs button:last-child {
+      border-right: 0;
+    }
+
+    .seg-tabs button.is-active {
+      color: #fff;
+      background: rgba(243, 106, 23, 0.18);
+    }
+
+    .asset-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .asset {
+      min-height: 112px;
+      padding: 10px;
+      background: rgba(255, 255, 255, 0.045);
+    }
+
+    .asset strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .certificate {
+      min-height: 96px;
+      border-radius: 6px;
+      background:
+        linear-gradient(135deg, rgba(255, 255, 255, 0.88), rgba(236, 220, 190, 0.82));
+      color: #382713;
+      padding: 10px;
+      font-weight: 800;
+    }
+
+    .certificate small {
+      display: block;
+      margin-top: 6px;
+      color: #725533;
+      font-size: 11px;
+    }
+
+    .route-mini {
+      min-height: 126px;
+      padding: 14px;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        #07100f;
+      background-size: 22px 22px;
+    }
+
+    .route-mini svg {
+      width: 100%;
+      height: 100%;
+      min-height: 92px;
+    }
+
+    .route-mini path {
+      fill: none;
+      stroke: var(--orange);
+      stroke-width: 5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .quote-card {
+      padding: 14px;
+      color: #e9dccb;
+      font-size: 16px;
+      line-height: 1.55;
+      background:
+        linear-gradient(135deg, rgba(219, 177, 113, 0.13), rgba(255, 255, 255, 0.03)),
+        rgba(255, 255, 255, 0.04);
+    }
+
+    .people-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+      padding: 12px;
+    }
+
+    .mini-avatar {
+      flex: 0 0 auto;
+      width: 30px;
+      height: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      border-radius: 999px;
+      background: linear-gradient(135deg, #35483f, #111815);
+    }
+
+    .mini-avatar:nth-child(2n) {
+      background: linear-gradient(135deg, #4d372c, #15100d);
+    }
+
+    .mini-avatar:nth-child(3n) {
+      background: linear-gradient(135deg, #233f5d, #0c1218);
+    }
+
+    .upload-card {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 12px;
+      padding: 12px;
+      align-items: center;
+    }
+
+    .paper-thumb {
+      min-height: 72px;
+      border-radius: 6px;
+      background:
+        linear-gradient(90deg, rgba(243, 106, 23, 0.17), transparent 38%),
+        linear-gradient(180deg, #f5efe3, #d9c7a8);
+      color: #2d2117;
+      padding: 8px;
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .paper-thumb span {
+      display: block;
+      margin-top: 8px;
+      color: #754928;
+      font-size: 18px;
+    }
+
+    .form-table {
+      display: grid;
+      gap: 1px;
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--line);
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 92px 1fr;
+      gap: 12px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.04);
+      font-size: 13px;
+    }
+
+    .form-row span {
+      color: var(--muted);
+    }
+
+    .form-row b {
+      overflow-wrap: anywhere;
+    }
+
+    .poster-card {
+      padding: 12px;
+    }
+
+    .poster-canvas {
+      position: relative;
+      min-height: 430px;
+      overflow: hidden;
+      border-radius: var(--radius);
+      border: 1px solid rgba(219, 177, 113, 0.42);
+      background:
+        linear-gradient(180deg, rgba(6, 10, 9, 0.14), rgba(6, 10, 9, 0.78)),
+        url("assets/memorial-ui-06-poster-maker.jpg") center 20% / 168% auto,
+        #0c1110;
+    }
+
+    .poster-canvas::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 72% 16%, rgba(243, 106, 23, 0.2), transparent 8rem),
+        linear-gradient(180deg, transparent 42%, rgba(0, 0, 0, 0.72));
+    }
+
+    .poster-copy {
+      position: absolute;
+      inset: 20px;
+      z-index: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .poster-copy h1 {
+      margin: 0;
+      color: #f3d5a9;
+      font-size: 29px;
+      line-height: 1.08;
+    }
+
+    .poster-copy .poster-time {
+      margin-top: 12px;
+      color: #fff3de;
+      font-size: 44px;
+      font-weight: 900;
+      line-height: 0.96;
+    }
+
+    .poster-copy .poster-foot {
+      margin-top: auto;
+      color: #f2dbc0;
+      line-height: 1.55;
+    }
+
+    .template-row {
+      display: grid;
+      grid-auto-columns: 86px;
+      grid-auto-flow: column;
+      gap: 8px;
+      margin: 12px -12px 0;
+      padding: 0 12px 1px;
+      overflow-x: auto;
+      scrollbar-width: none;
+    }
+
+    .template-row::-webkit-scrollbar {
+      display: none;
+    }
+
+    .template {
+      height: 58px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      color: var(--text);
+      background:
+        linear-gradient(135deg, rgba(243, 106, 23, 0.24), rgba(255, 255, 255, 0.04)),
+        #121715;
+      font-size: 12px;
+    }
+
+    .template.is-active {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 1px rgba(243, 106, 23, 0.35) inset;
+    }
+
+    .feed-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+
+    .feed-tabs button {
+      min-height: 34px;
+      border-radius: 999px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .feed-tabs button.is-active {
+      color: #fff;
+      background: rgba(243, 106, 23, 0.18);
+    }
+
+    .feed-card {
+      padding: 12px;
+    }
+
+    .feed-head {
+      display: grid;
+      grid-template-columns: 36px 1fr auto;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+
+    .feed-head b {
+      display: block;
+      font-size: 14px;
+    }
+
+    .feed-head span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .feed-media {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .feed-media div {
+      min-height: 68px;
+      border-radius: 6px;
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.32)),
+        linear-gradient(135deg, #34483f, #17201c);
+    }
+
+    .feed-media div:nth-child(2) {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.32)),
+        linear-gradient(135deg, #513728, #1a120e);
+    }
+
+    .feed-media div:nth-child(3) {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(0, 0, 0, 0.32)),
+        linear-gradient(135deg, #223f59, #10161a);
+    }
+
+    .feed-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .composer {
+      position: sticky;
+      bottom: 76px;
+      display: grid;
+      grid-template-columns: 1fr 64px;
+      gap: 8px;
+      padding: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: var(--radius);
+      background: rgba(11, 15, 13, 0.92);
+      backdrop-filter: blur(16px);
+    }
+
+    .composer input {
+      min-width: 0;
+      border: 0;
+      border-radius: 6px;
+      padding: 0 10px;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.06);
+      outline: none;
+    }
+
+    .composer button {
+      min-height: 38px;
+      border-radius: 6px;
+      color: #fff;
+      background: var(--orange);
+      font-weight: 700;
+    }
+
+    .public-card {
+      padding: 14px;
+      color: #17110b;
+      background:
+        radial-gradient(circle at 84% 0%, rgba(243, 106, 23, 0.15), transparent 11rem),
+        linear-gradient(180deg, #f2eee7, #d8d2c8);
+    }
+
+    .public-top {
+      display: grid;
+      grid-template-columns: 68px 1fr;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .public-top .avatar {
+      width: 68px;
+      height: 68px;
+      box-shadow: none;
+    }
+
+    .public-meta {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1px;
+      margin-top: 14px;
+      overflow: hidden;
+      border-radius: 8px;
+      background: rgba(23, 17, 11, 0.12);
+    }
+
+    .public-meta div {
+      padding: 10px 4px;
+      background: rgba(255, 255, 255, 0.52);
+      text-align: center;
+    }
+
+    .public-meta b {
+      display: block;
+      color: #412a15;
+      font-size: 18px;
+    }
+
+    .public-meta span {
+      display: block;
+      margin-top: 3px;
+      color: #6d5d4d;
+      font-size: 11px;
+    }
+
+    .profile-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .profile-panel {
+      min-height: 130px;
+      padding: 12px;
+    }
+
+    .profile-panel b {
+      display: block;
+      font-size: 15px;
+    }
+
+    .mini-map {
+      position: relative;
+      height: 78px;
+      margin-top: 10px;
+      border-radius: 6px;
+      background:
+        linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+        #07100f;
+      background-size: 20px 20px;
+    }
+
+    .mini-map span {
+      position: absolute;
+      width: 8px;
+      height: 8px;
+      border-radius: 999px;
+      background: var(--orange);
+      box-shadow: 0 0 12px rgba(243, 106, 23, 0.7);
+    }
+
+    .mini-map span:nth-child(1) { left: 68%; top: 48%; }
+    .mini-map span:nth-child(2) { left: 57%; top: 44%; background: var(--blue); }
+    .mini-map span:nth-child(3) { left: 72%; top: 58%; }
+    .mini-map span:nth-child(4) { left: 46%; top: 56%; background: var(--blue); }
+    .mini-map span:nth-child(5) { left: 63%; top: 34%; }
+
+    .muted {
+      color: var(--muted);
+    }
+
+    .orange {
+      color: var(--orange);
+    }
+
+    .gold {
+      color: var(--gold);
+    }
+
+    .toast {
+      position: fixed;
+      right: max(18px, calc((100vw - 430px) / 2 + 18px));
+      bottom: calc(96px + env(safe-area-inset-bottom));
+      left: max(18px, calc((100vw - 430px) / 2 + 18px));
+      z-index: 60;
+      width: min(calc(100% - 36px), 394px);
+      margin: 0 auto;
+      padding: 12px 14px;
+      border: 1px solid rgba(255, 255, 255, 0.10);
+      border-radius: var(--radius);
+      background: rgba(12, 17, 15, 0.94);
+      box-shadow: 0 14px 40px rgba(0, 0, 0, 0.42);
+      color: var(--text);
+      font-size: 13px;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateY(12px);
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      backdrop-filter: blur(18px);
+    }
+
+    .toast.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+  </style>
+</head>
+<body>
+  <div class="app" id="app">
+    <header class="topbar" id="topbar">
+      <button class="icon-btn back-btn" type="button" id="backBtn" aria-label="返回" hidden>
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M15 19 8 12l7-7" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </button>
+      <div class="titlebox">
+        <b id="appTitle">参赛护照</b>
+        <span id="appSubtitle">每一场完赛，都收进纪念册</span>
+      </div>
+      <button class="icon-btn" type="button" data-action="share" aria-label="分享">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+          <path d="M8.5 12.5 15.5 8.7M8.5 11.5l7 3.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+          <circle cx="6" cy="12" r="2.6" stroke="currentColor" stroke-width="2"></circle>
+          <circle cx="18" cy="7.5" r="2.6" stroke="currentColor" stroke-width="2"></circle>
+          <circle cx="18" cy="16.5" r="2.6" stroke="currentColor" stroke-width="2"></circle>
+        </svg>
+      </button>
+    </header>
+
+    <main class="screen" id="screen" tabindex="-1"></main>
+
+    <nav class="tabbar" aria-label="主导航">
+      <button type="button" data-tab="passport">护照</button>
+      <button type="button" data-tab="map">足迹</button>
+      <button type="button" data-tab="archive">档案</button>
+      <button type="button" data-tab="community">社区</button>
+      <button type="button" data-tab="profile">我的</button>
+    </nav>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  </div>
+
+  <script async src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" onload="window.__leafletLoaded=true;window.dispatchEvent(new Event('leaflet-ready'))" onerror="window.dispatchEvent(new Event('leaflet-failed'))"></script>
+  <script>
+    const state = {
+      view: "passport",
+      tab: "passport",
+      history: [],
+      memoryTab: "cert",
+      mapFilter: "all",
+      feedTab: "pb",
+      posterTemplate: "pb"
+    };
+
+    const topbar = document.querySelector("#topbar");
+    const screen = document.querySelector("#screen");
+    const title = document.querySelector("#appTitle");
+    const subtitle = document.querySelector("#appSubtitle");
+    const backBtn = document.querySelector("#backBtn");
+    const toast = document.querySelector("#toast");
+
+    const races = [
+      { city: "厦门", name: "厦门马拉松", date: "2024.01.07", distance: "全程 42.195km", time: "3:28:15", pace: "4:55/km", rank: "812 / 35000", ageRank: "156 / 2341", level: "精英级", pb: true, official: true, medal: "gold" },
+      { city: "无锡", name: "无锡马拉松", date: "2024.03.24", distance: "全程 42.195km", time: "3:33:47", pace: "5:04/km", rank: "1044 / 30800", ageRank: "216 / 2904", level: "大众二级", pb: false, official: true, medal: "gold" },
+      { city: "兰州", name: "兰州马拉松", date: "2024.05.26", distance: "全程 42.195km", time: "3:36:58", pace: "5:08/km", rank: "1532 / 28000", ageRank: "281 / 2110", level: "大众二级", pb: false, official: false, medal: "silver" },
+      { city: "沈阳", name: "沈阳马拉松", date: "2024.09.08", distance: "全程 42.195km", time: "3:41:22", pace: "5:15/km", rank: "1820 / 26000", ageRank: "330 / 1988", level: "大众二级", pb: false, official: false, medal: "gold" },
+      { city: "北京", name: "北京马拉松", date: "2023.10.29", distance: "全程 42.195km", time: "3:31:02", pace: "5:00/km", rank: "928 / 30000", ageRank: "188 / 2400", level: "精英级", pb: true, official: true, medal: "gold" },
+      { city: "上海", name: "上海马拉松", date: "2023.11.26", distance: "全程 42.195km", time: "3:34:28", pace: "5:05/km", rank: "1203 / 28000", ageRank: "214 / 2170", level: "大众二级", pb: false, official: true, medal: "gold" }
+    ];
+
+    const mapCities = [
+      { id: "beijing", city: "北京", race: "北京马拉松", date: "2023.10.29", time: "3:31:02", count: 2, type: "pb", lat: 39.9042, lng: 116.4074, label: "top" },
+      { id: "wuxi", city: "无锡", race: "无锡马拉松", date: "2024.03.24", time: "3:33:47", count: 1, type: "official", lat: 31.4912, lng: 120.3119, label: "right" },
+      { id: "shanghai", city: "上海", race: "上海马拉松", date: "2023.11.26", time: "3:34:28", count: 2, type: "official", lat: 31.2304, lng: 121.4737, label: "right" },
+      { id: "xiamen", city: "厦门", race: "厦门马拉松", date: "2024.01.07", time: "3:28:15", count: 3, type: "pb", lat: 24.4798, lng: 118.0894, label: "right" },
+      { id: "wuhan", city: "武汉", race: "武汉马拉松", date: "2025.03", time: "3:59:51", count: 1, type: "official", lat: 30.5928, lng: 114.3055 },
+      { id: "chengdu", city: "成都", race: "成都马拉松", date: "2025.10", time: "4:05:27", count: 2, type: "official", lat: 30.5728, lng: 104.0668, label: "left" },
+      { id: "shenyang", city: "沈阳", race: "沈阳马拉松", date: "2024.09.08", time: "3:41:22", count: 1, type: "official", lat: 41.8057, lng: 123.4315, label: "right" },
+      { id: "zhengzhou", city: "郑州", race: "郑州马拉松", date: "待解锁", time: "目标 3:30", count: 1, type: "pending", lat: 34.7466, lng: 113.6254, label: "top" },
+      { id: "guangzhou", city: "广州", race: "广州马拉松", date: "待解锁", time: "目标 3:30", count: 1, type: "pending", lat: 23.1291, lng: 113.2644, label: "left" },
+      { id: "lanzhou", city: "兰州", race: "兰州马拉松", date: "2024.05.26", time: "3:36:58", count: 1, type: "official", lat: 36.0611, lng: 103.8343, label: "left" }
+    ];
+
+    let footprintMap = null;
+    let routeLine = null;
+    const footprintMarkers = new Map();
+
+    const titles = {
+      passport: ["参赛护照", "每一场完赛，都收进纪念册"],
+      map: ["我的城市足迹", "跑过的城市与官方认证"],
+      archive: ["完赛档案", "成绩单、证书、奖牌与路线"],
+      community: ["同场跑友", "只和同一场比赛的人聊"],
+      profile: ["跑者阿明的纪念册", "可公开分享的个人主页"],
+      memory: ["2024 厦门马拉松", "单场完赛纪念册"],
+      ocr: ["上传官方成绩单", "识别后保存到纪念册"],
+      poster: ["生成完赛海报", "把成绩变成可分享的记忆"]
+    };
+
+    function setTitle(view) {
+      const pair = titles[view] || titles.passport;
+      title.textContent = pair[0];
+      subtitle.textContent = pair[1];
+      backBtn.hidden = ["passport", "map", "archive", "community", "profile"].includes(view);
+    }
+
+    function navigate(view, options = {}) {
+      const push = options.push !== false;
+      if (push && state.view !== view) state.history.push(state.view);
+      state.view = view;
+      if (["passport", "map", "archive", "community", "profile"].includes(view)) state.tab = view;
+      render();
+      screen.scrollTop = 0;
+    }
+
+    function goBack() {
+      const previous = state.history.pop();
+      navigate(previous || state.tab || "passport", { push: false });
+    }
+
+    function showToast(message) {
+      toast.textContent = message;
+      toast.classList.add("is-visible");
+      window.clearTimeout(showToast.timer);
+      showToast.timer = window.setTimeout(() => toast.classList.remove("is-visible"), 1800);
+    }
+
+    function tag(text, className = "") {
+      return `<span class="tag ${className}">${text}</span>`;
+    }
+
+    function medalClass(race) {
+      return `medal small ribbon ${race.medal === "silver" ? "silver" : ""}`;
+    }
+
+    function renderPassport() {
+      return `
+        <div class="stack">
+          <section class="card hero-card">
+            <div class="runner-head">
+              <div class="avatar" aria-hidden="true"></div>
+              <div>
+                <h1>跑者阿明</h1>
+                <div class="runner-meta">
+                  ${tag("跑龄 5 年", "gold")}
+                  ${tag("大众精英级", "orange")}
+                  ${tag("官方认证 18 场", "blue")}
+                </div>
+              </div>
+            </div>
+            <div class="passport-stats">
+              <div><b>23</b><span>完赛</span></div>
+              <div><b>12</b><span>跑过城市</span></div>
+              <div><b>18</b><span>官方认证</span></div>
+              <div><b>前10%</b><span>大众等级</span></div>
+            </div>
+          </section>
+
+          <div class="grid-2">
+            <button class="card metric-card" type="button" data-view="memory">
+              <span>全马 PB</span>
+              <b>3:28:15</b>
+              <small>2024 厦门马拉松</small>
+            </button>
+            <button class="card metric-card" type="button" data-view="poster">
+              <span>半马 PB</span>
+              <b>1:35:42</b>
+              <small>配速 4:32/km</small>
+            </button>
+          </div>
+
+          <div class="primary-actions">
+            <button class="action-btn" type="button" data-view="ocr">上传成绩单</button>
+            <button class="ghost-btn" type="button" data-view="poster">生成海报</button>
+          </div>
+
+          <section class="section-title">
+            <h2>最近完赛</h2>
+            <span>已入册</span>
+          </section>
+          <button class="card race-card" type="button" data-view="memory">
+            <div>
+              <h3>2024 厦门马拉松</h3>
+              <p>2024.01.07 · 全程 · 官方认证</p>
+              <div class="race-time">3:28:15</div>
+            </div>
+            <div class="medal ribbon" aria-hidden="true"></div>
+          </button>
+
+          <section class="section-title">
+            <h2>代表赛事</h2>
+            <span>6 场</span>
+          </section>
+          <div class="h-scroll">
+            ${races.slice(0, 5).map((race, index) => `
+              <button class="card mini-race" type="button" data-view="memory" style="--bg-image: url('assets/memorial-ui-0${Math.min(index + 1, 8)}-${["passport-home", "footprint-map", "archive-list", "finish-memory", "ocr-certificate"][index] || "finish-memory"}.jpg')">
+                <b>${race.name}</b>
+                <span>${race.time} ${race.pb ? "PB" : ""}</span>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function cityDot(city, left, top, type, size = 16) {
+      const color = type === "pb" ? "var(--orange)" : type === "official" ? "var(--blue)" : "rgba(255,255,255,0.76)";
+      return `<i class="city-dot" style="left:${left}%;top:${top}%;--dot:${color};--size:${size}px"><span>${city}</span></i>`;
+    }
+
+    function renderMap() {
+      const chips = [
+        ["all", "全部"],
+        ["official", "官方认证"],
+        ["pb", "PB 赛事"],
+        ["pending", "待解锁"]
+      ];
+      return `
+        <div class="stack">
+          <div class="chips">
+            ${chips.map(([id, label]) => `<button class="chip ${state.mapFilter === id ? "is-active" : ""}" type="button" data-map-filter="${id}">${label}</button>`).join("")}
+          </div>
+          <section class="card map-card">
+            <div id="footprintMap" class="interactive-map" role="img" aria-label="马拉松城市足迹地图"></div>
+            <div class="map-legend">
+              <span><i class="legend-dot" style="--dot:var(--orange)"></i>PB 城市</span>
+              <span><i class="legend-dot" style="--dot:var(--blue)"></i>官方认证</span>
+              <span><i class="legend-dot" style="--dot:rgba(255,255,255,0.76)"></i>待解锁</span>
+            </div>
+          </section>
+
+          <div class="stat-strip">
+            <div><b>12</b><span>已点亮城市</span></div>
+            <div><b>23</b><span>完赛记录</span></div>
+            <div><b>3</b><span>PB 城市</span></div>
+          </div>
+
+          <section class="section-title">
+            <h2>城市纪念章</h2>
+            <span>按完赛次数</span>
+          </section>
+          <div class="city-grid">
+            ${["厦门", "北京", "上海", "成都", "武汉", "无锡"].map((city, index) => `
+              <button class="city-tile card" type="button" data-view="${index === 0 ? "memory" : "archive"}">
+                <b>${city}</b>
+                <strong>${[3, 2, 2, 2, 1, 1][index]}</strong>
+                <span>${index === 0 ? "PB" : index < 3 ? "认证" : "完赛"}</span>
+              </button>
+            `).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function destroyFootprintMap() {
+      if (footprintMap) {
+        footprintMap.remove();
+        footprintMap = null;
+      }
+      routeLine = null;
+      footprintMarkers.clear();
+    }
+
+    function mapTypeColor(type) {
+      if (type === "pb") return "#f36a17";
+      if (type === "official") return "#4b95ff";
+      return "rgba(255,255,255,0.78)";
+    }
+
+    function mapMarkerSize(count) {
+      return 24 + Math.min(count, 3) * 6;
+    }
+
+    function matchesMapFilter(city) {
+      if (state.mapFilter === "all") return true;
+      if (state.mapFilter === "official") return city.type === "official" || city.type === "pb";
+      if (state.mapFilter === "pb") return city.type === "pb";
+      return city.type === "pending";
+    }
+
+    function mapPopup(city) {
+      const status = city.type === "pb" ? "PB 城市" : city.type === "official" ? "官方认证" : "待解锁";
+      return `
+        <div class="map-popup">
+          <h3>${city.city} · ${status}</h3>
+          <p>${city.race}</p>
+          <p>${city.date}</p>
+          <p><b>${city.time}</b></p>
+        </div>
+      `;
+    }
+
+    function renderLocalMapFallback(container) {
+      container.innerHTML = `
+        <div class="map-fallback">
+          <div class="map-wrap">
+            <svg class="map-svg" viewBox="0 0 360 300" aria-hidden="true">
+              <path d="M44 82 72 58l42-9 34 15 27-20 53 16 31 31 45 1 23 32-17 36 17 34-37 26-45-1-32 28-52-16-48 17-39-21-47 4-21-33 15-43-26-31 28-40Z"></path>
+              <path d="M90 128 146 100l76 11 51-18M118 196l55-53 78 35M206 228l19-63 65-8"></path>
+            </svg>
+            ${cityDot("北京", 67, 31, "pb", 19)}
+            ${cityDot("无锡", 73, 48, "official", 16)}
+            ${cityDot("上海", 79, 54, "official", 16)}
+            ${cityDot("厦门", 71, 75, "pb", 24)}
+            ${cityDot("武汉", 58, 58, "official", 15)}
+            ${cityDot("成都", 42, 58, "official", 15)}
+            ${cityDot("沈阳", 75, 24, "official", 14)}
+            ${cityDot("郑州", 57, 44, "pending", 12)}
+            ${cityDot("广州", 64, 76, "pending", 13)}
+          </div>
+        </div>
+      `;
+    }
+
+    function createFootprintMarker(city) {
+      const size = mapMarkerSize(city.count);
+      const icon = L.divIcon({
+        className: "",
+        html: `
+          <div class="footprint-marker ${matchesMapFilter(city) ? "" : "is-muted"}" style="--marker-size:${size}px;--marker-color:${mapTypeColor(city.type)}">
+            <span class="marker-label ${city.label ? `pos-${city.label}` : ""}">${city.city}</span>
+          </div>
+        `,
+        iconSize: [size, size],
+        iconAnchor: [size / 2, size / 2],
+        popupAnchor: [0, -size / 2]
+      });
+      const marker = L.marker([city.lat, city.lng], { icon }).addTo(footprintMap);
+      marker.bindPopup(mapPopup(city));
+      marker.on("click", () => {
+        footprintMap.flyTo([city.lat, city.lng], Math.max(footprintMap.getZoom(), 5.4), { duration: 0.55 });
+      });
+      footprintMarkers.set(city.id, marker);
+    }
+
+    function initFootprintMap() {
+      const container = document.querySelector("#footprintMap");
+      if (!container) return;
+      destroyFootprintMap();
+
+      if (!window.L) {
+        renderLocalMapFallback(container);
+        return;
+      }
+
+      const isMobile = window.matchMedia("(max-width: 700px)").matches;
+      footprintMap = L.map(container, {
+        attributionControl: true,
+        boxZoom: false,
+        doubleClickZoom: true,
+        dragging: true,
+        scrollWheelZoom: false,
+        tap: true,
+        zoomControl: true
+      }).setView(isMobile ? [32.4, 112.8] : [33.2, 112.8], isMobile ? 3.72 : 4.25);
+
+      L.tileLayer("https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png", {
+        attribution: '&copy; OpenStreetMap &copy; CARTO',
+        maxZoom: 18,
+        minZoom: 3
+      }).addTo(footprintMap);
+
+      routeLine = L.polyline(
+        mapCities.filter(city => city.type !== "pending").map(city => [city.lat, city.lng]),
+        {
+          color: "#f36a17",
+          dashArray: "8 10",
+          lineCap: "round",
+          opacity: state.mapFilter === "all" ? 0.72 : 0.22,
+          weight: 3
+        }
+      ).addTo(footprintMap);
+
+      mapCities.forEach(createFootprintMarker);
+      setTimeout(() => footprintMap?.invalidateSize(), 40);
+    }
+
+    function raceRow(race) {
+      return `
+        <button class="card race-row" type="button" data-view="memory">
+          <div class="${medalClass(race)}" aria-hidden="true"></div>
+          <div>
+            <h3>${race.name} | ${race.city}</h3>
+            <p>${race.date} · ${race.distance}</p>
+            <div class="race-time">${race.time}</div>
+            <div class="runner-meta">
+              ${race.pb ? tag("PB", "orange") : ""}
+              ${race.official ? tag("认证", "blue") : tag("待认证")}
+            </div>
+          </div>
+          <span class="row-action" aria-hidden="true">›</span>
+        </button>
+      `;
+    }
+
+    function renderArchive() {
+      return `
+        <div class="stack">
+          <div class="toolbar">
+            <div class="search">搜索赛事、城市、年份</div>
+            <button class="icon-btn soft-card" type="button" data-action="filter" aria-label="筛选">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 6h16M7 12h10M10 18h4" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
+          </div>
+          <div class="year-head"><b>2024 年</b><span>4 场比赛</span></div>
+          <div class="race-list">
+            ${races.slice(0, 4).map(raceRow).join("")}
+          </div>
+          <div class="year-head"><b>2023 年</b><span>2 场比赛</span></div>
+          <div class="race-list">
+            ${races.slice(4).map(raceRow).join("")}
+          </div>
+        </div>
+      `;
+    }
+
+    function renderMemory() {
+      const race = races[0];
+      return `
+        <div class="stack">
+          <section class="card finish-hero">
+            <div class="runner-meta">
+              ${tag("PB", "orange")}
+              ${tag("官方认证", "blue")}
+            </div>
+            <h1>${race.name} 2024</h1>
+            <p>${race.date} · ${race.city} · ${race.distance}</p>
+          </section>
+
+          <section class="card big-result">
+            <div><span>完赛成绩</span><b>${race.time}</b><small class="muted">平均配速 ${race.pace}</small></div>
+            <div><span>总排名</span><strong>${race.rank}</strong><small class="muted">年龄组 ${race.ageRank}</small></div>
+          </section>
+
+          <div class="seg-tabs">
+            ${[
+              ["cert", "成绩证书"],
+              ["medal", "完赛奖牌"],
+              ["route", "路线轨迹"],
+              ["note", "赛后感言"]
+            ].map(([id, label]) => `<button class="${state.memoryTab === id ? "is-active" : ""}" type="button" data-memory-tab="${id}">${label}</button>`).join("")}
+          </div>
+
+          <section class="asset-grid">
+            <div class="card asset">
+              <strong>官方成绩单</strong>
+              <div class="certificate">3:28:15<small>厦门马拉松组委会</small></div>
+            </div>
+            <div class="card asset">
+              <strong>完赛奖牌</strong>
+              <div class="medal ribbon" style="margin:20px auto 0" aria-hidden="true"></div>
+            </div>
+          </section>
+
+          <section class="card route-mini">
+            <svg viewBox="0 0 310 100" aria-label="路线轨迹">
+              <path d="M16 70 C 50 30, 70 76, 102 44 S 162 25, 180 58 S 226 88, 250 44 S 287 26, 296 50"></path>
+              <circle cx="16" cy="70" r="7" fill="#35c875"></circle>
+              <circle cx="296" cy="50" r="7" fill="#f36a17"></circle>
+            </svg>
+          </section>
+
+          <section class="card quote-card">
+            厦马的海风，PB 的见证，五年的跑龄终于破 330。
+          </section>
+
+          <section class="card">
+            <div class="people-row">
+              <span class="mini-avatar"></span><span class="mini-avatar"></span><span class="mini-avatar"></span><span class="mini-avatar"></span><span class="mini-avatar"></span>
+              <span class="muted">128 位同场跑友留言</span>
+            </div>
+          </section>
+
+          <div class="primary-actions">
+            <button class="action-btn" type="button" data-view="poster">生成海报</button>
+            <button class="ghost-btn" type="button" data-view="community">去同场话题</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderOcr() {
+      const rows = [
+        ["赛事名称", "厦门马拉松"],
+        ["比赛日期", "2024-01-07"],
+        ["项目", "全程马拉松 42.195km"],
+        ["完赛成绩", "3:28:15"],
+        ["平均配速", "4:55/km"],
+        ["总排名", "812 / 35000"],
+        ["年龄组排名", "156 / 2341"],
+        ["大众等级", "精英级（前10%）"]
+      ];
+      return `
+        <div class="stack">
+          <section class="card upload-card">
+            <div class="paper-thumb">官方成绩单<span>3:28:15</span></div>
+            <div>
+              <h3 style="margin:0;font-size:16px">点击或拍照上传</h3>
+              <p class="muted" style="margin:7px 0 0;font-size:12px;line-height:1.45">支持 JPG / PNG / PDF，识别后可手动校正。</p>
+              <div class="runner-meta">${tag("识别成功", "green")}${tag("可修改")}</div>
+            </div>
+          </section>
+
+          <section class="section-title">
+            <h2>识别结果</h2>
+            <span>已校验关键字段</span>
+          </section>
+          <div class="form-table">
+            ${rows.map(([k, v]) => `<div class="form-row"><span>${k}</span><b>${v}</b></div>`).join("")}
+          </div>
+
+          <button class="solid-btn" type="button" data-action="save-ocr">确认保存到纪念册</button>
+        </div>
+      `;
+    }
+
+    function renderPoster() {
+      const templates = [
+        ["pb", "PB 高光"],
+        ["city", "城市记忆"],
+        ["medal", "奖牌纪念"],
+        ["route", "路线地图"],
+        ["rank", "等级达标"]
+      ];
+      return `
+        <div class="stack">
+          <section class="card poster-card">
+            <div class="poster-canvas">
+              <div class="poster-copy">
+                <h1>2024<br>厦门马拉松</h1>
+                <div class="poster-time">3:28:15</div>
+                <p class="poster-foot">PB 成功 · 配速 4:55/km<br>厦马的海风，PB 的见证</p>
+              </div>
+            </div>
+            <div class="template-row">
+              ${templates.map(([id, label]) => `<button class="template ${state.posterTemplate === id ? "is-active" : ""}" type="button" data-template="${id}">${label}</button>`).join("")}
+            </div>
+          </section>
+          <div class="primary-actions">
+            <button class="action-btn" type="button" data-action="save-poster">保存海报</button>
+            <button class="ghost-btn" type="button" data-action="share-poster">分享</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderCommunity() {
+      const tabs = [
+        ["pb", "PB报喜"],
+        ["route", "赛道吐槽"],
+        ["supply", "补给评价"],
+        ["photo", "照片分享"]
+      ];
+      return `
+        <div class="stack">
+          <section class="card race-card" style="grid-template-columns:1fr auto">
+            <div>
+              <h3>2024 厦门马拉松</h3>
+              <p>同场完赛 35000 人 · 本页 1289 位跑友</p>
+            </div>
+            <span class="tag orange">刚刚更新</span>
+          </section>
+          <div class="feed-tabs">
+            ${tabs.map(([id, label]) => `<button class="${state.feedTab === id ? "is-active" : ""}" type="button" data-feed-tab="${id}">${label}</button>`).join("")}
+          </div>
+
+          ${[
+            ["跑者阿明", "终于破 330 了！感谢厦马！", "128", "32"],
+            ["风一样的女子", "海风很大，但 PB 更爽。厦门太美了！", "86", "18"],
+            ["跑步的老张", "首次厦马，顺利完赛，赛道真的漂亮。", "64", "12"]
+          ].map((item, index) => `
+            <article class="card feed-card">
+              <div class="feed-head">
+                <span class="mini-avatar"></span>
+                <div><b>${item[0]}</b><span>${index === 0 ? "刚刚" : `${index * 8 + 7} 分钟前`}</span></div>
+                ${index === 0 ? tag("PB", "green") : ""}
+              </div>
+              <p>${item[1]}</p>
+              ${index === 0 ? `<div class="feed-media"><div></div><div></div><div></div></div>` : ""}
+              <div class="feed-actions"><span>赞 ${item[2]}</span><span>评论 ${item[3]}</span></div>
+            </article>
+          `).join("")}
+
+          <div class="composer">
+            <input aria-label="分享你的赛后心情" placeholder="分享你的赛后心情...">
+            <button type="button" data-action="post">发布</button>
+          </div>
+        </div>
+      `;
+    }
+
+    function renderProfile() {
+      return `
+        <div class="stack">
+          <section class="card public-card">
+            <div class="public-top">
+              <div class="avatar" aria-hidden="true"></div>
+              <div>
+                <h1>跑者阿明的<br>跑马纪念册</h1>
+                <p style="margin:8px 0 0;color:#6d5d4d;font-size:12px">跑龄 5 年 · 完赛 23 场 · 跑过 12 城</p>
+              </div>
+            </div>
+            <div class="public-meta">
+              <div><b>3:28:15</b><span>全马 PB</span></div>
+              <div><b>18</b><span>官方认证</span></div>
+              <div><b>12</b><span>城市</span></div>
+              <div><b>前10%</b><span>大众等级</span></div>
+            </div>
+          </section>
+
+          <div class="profile-grid">
+            <button class="card profile-panel" type="button" data-view="map">
+              <b>城市足迹</b>
+              <div class="mini-map"><span></span><span></span><span></span><span></span><span></span></div>
+            </button>
+            <button class="card profile-panel" type="button" data-view="memory">
+              <b>PB 成绩</b>
+              <p class="muted" style="margin:12px 0 0">全马 PB</p>
+              <div class="race-time">3:28:15</div>
+              <p class="muted" style="margin:8px 0 0">半马 PB 1:35:42</p>
+            </button>
+          </div>
+
+          <section class="section-title">
+            <h2>代表赛事</h2>
+            <span>公开展示</span>
+          </section>
+          <div class="h-scroll">
+            ${races.slice(0, 4).map((race, index) => `
+              <button class="card mini-race" type="button" data-view="memory">
+                <b>${race.date.slice(0, 4)} ${race.name}</b>
+                <span>${race.time} ${race.pb ? "PB" : race.official ? "认证" : ""}</span>
+              </button>
+            `).join("")}
+          </div>
+          <button class="solid-btn" type="button" data-action="share-profile">分享我的纪念册</button>
+        </div>
+      `;
+    }
+
+    const renderers = {
+      passport: renderPassport,
+      map: renderMap,
+      archive: renderArchive,
+      memory: renderMemory,
+      ocr: renderOcr,
+      poster: renderPoster,
+      community: renderCommunity,
+      profile: renderProfile
+    };
+
+    function bindActiveNav() {
+      document.querySelectorAll("[data-tab]").forEach(button => {
+        button.classList.toggle("is-active", button.dataset.tab === state.tab && state.view === state.tab);
+      });
+    }
+
+    function render() {
+      destroyFootprintMap();
+      setTitle(state.view);
+      screen.innerHTML = renderers[state.view]();
+      bindActiveNav();
+      if (state.view === "map") {
+        window.setTimeout(initFootprintMap, 0);
+      }
+    }
+
+    document.addEventListener("click", event => {
+      const tabButton = event.target.closest("[data-tab]");
+      if (tabButton) {
+        state.history = [];
+        navigate(tabButton.dataset.tab);
+        return;
+      }
+
+      const viewButton = event.target.closest("[data-view]");
+      if (viewButton) {
+        navigate(viewButton.dataset.view);
+        return;
+      }
+
+      const mapFilter = event.target.closest("[data-map-filter]");
+      if (mapFilter) {
+        state.mapFilter = mapFilter.dataset.mapFilter;
+        render();
+        showToast(`已切换到${mapFilter.textContent}`);
+        return;
+      }
+
+      const memoryTab = event.target.closest("[data-memory-tab]");
+      if (memoryTab) {
+        state.memoryTab = memoryTab.dataset.memoryTab;
+        render();
+        return;
+      }
+
+      const feedTab = event.target.closest("[data-feed-tab]");
+      if (feedTab) {
+        state.feedTab = feedTab.dataset.feedTab;
+        render();
+        return;
+      }
+
+      const template = event.target.closest("[data-template]");
+      if (template) {
+        state.posterTemplate = template.dataset.template;
+        render();
+        showToast(`已切换到${template.textContent}模板`);
+        return;
+      }
+
+      const action = event.target.closest("[data-action]");
+      if (!action) return;
+      const type = action.dataset.action;
+      const messages = {
+        share: "已生成当前页面分享卡片",
+        filter: "筛选面板将在正式版打开",
+        "save-ocr": "成绩已保存到 2024 厦门马拉松纪念册",
+        "save-poster": "海报已保存到相册",
+        "share-poster": "海报分享链接已生成",
+        post: "动态已发布到同场话题",
+        "share-profile": "个人纪念册分享链接已生成"
+      };
+      showToast(messages[type] || "操作已完成");
+    });
+
+    backBtn.addEventListener("click", goBack);
+
+    screen.addEventListener("scroll", () => {
+      topbar.classList.toggle("is-raised", screen.scrollTop > 8);
+    });
+
+    window.addEventListener("leaflet-ready", () => {
+      if (state.view === "map") initFootprintMap();
+    });
+
+    render();
+  </script>
+</body>
+</html>

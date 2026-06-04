@@ -1,0 +1,18 @@
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
+[[redirects]]
+  from = "/beta"
+  to = "/beta.html"
+  status = 200
+
+[[redirects]]
+  from = "/u/:slug"
+  to = "/beta.html"
+  status = 200
+
+[[redirects]]
+  from = "/race/:id"
+  to = "/beta.html"
+  status = 200

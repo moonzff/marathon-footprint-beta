@@ -72,6 +72,13 @@ assert(html.includes("function posterEventTitle"), "poster title must use the re
 assert(!html.includes("${safe(result.city)}马拉松"), "poster must not rewrite special races like 湘江半程马拉松 into city + 马拉松");
 assert(html.includes("poster-route-art"), "uploaded route maps should be treated as poster art rather than pasted raw screenshots");
 assert(html.includes("poster-runner-photo"), "uploaded personal photos should become poster hero material");
+assert(html.includes("@imgly/background-removal"), "runner photos must use browser AI background removal");
+assert(html.includes("function ensureBackgroundRemoval"), "background removal module loader is missing");
+assert(html.includes("function removeRunnerPhotoBackground"), "runner photo background removal helper is missing");
+assert(html.includes("function ensureCanvasConvertToBlob"), "background removal must polyfill canvas convertToBlob for mobile webviews");
+assert(html.includes("aiCutout"), "runner photo assets must record AI cutout state");
+assert(html.includes("has-cutout-photo"), "poster must render a distinct layout for cutout runner photos");
+assert(html.includes("上传后会先智能抠图"), "runner photo upload copy must explain AI cutout behavior");
 assert(html.includes("poster-distance-badge"), "poster must label full marathon versus half marathon results");
 assert(html.includes("function posterLineHtml"), "poster copy must protect against orphan characters");
 assert(html.includes("poster-nowrap"), "poster copy must include no-wrap spans for short ending phrases");
@@ -207,7 +214,7 @@ function renderXiangmaPosterSample() {
         pb: false,
         medal: "gold",
         assets: {
-          runnerPhoto: { name: "runner.jpg", dataUrl: "data:image/jpeg;base64,RUNNER" },
+          runnerPhoto: { name: "runner.jpg", dataUrl: "data:image/png;base64,RUNNER", cutout: true, aiCutout: true },
           routeImage: { name: "route.jpg", dataUrl: "data:image/jpeg;base64,ROUTE" },
           medalImage: { name: "medal.jpg", dataUrl: "data:image/jpeg;base64,MEDAL" }
         }
@@ -250,7 +257,8 @@ assert(!xiangmaPoster.includes("长沙马拉松"), "Xiangjiang poster must not b
 assert(xiangmaPoster.includes("半马成绩"), "Xiangjiang half poster must explicitly label the result as half marathon");
 assert(xiangmaPoster.includes("爬升 330m"), "poster must surface elevation gain when recorded");
 assert(xiangmaPoster.includes("poster-runner-photo"), "runner photo must become the poster hero layer");
-assert(xiangmaPoster.includes("data:image/jpeg;base64,RUNNER"), "runner photo upload must be used in the poster");
+assert(xiangmaPoster.includes("has-cutout-photo"), "AI cutout runner photo must use the cutout poster layout");
+assert(xiangmaPoster.includes("data:image/png;base64,RUNNER"), "runner photo upload must be used in the poster");
 assert(xiangmaPoster.includes("查赛事照片"), "poster must offer the saved race photo album entry");
 assert(xiangmaPoster.includes("poster-route-art"), "route upload must render through the stylized poster art layer");
 assert(xiangmaPoster.includes("data:image/jpeg;base64,MEDAL"), "medal upload must be used in the poster instead of the default medal");

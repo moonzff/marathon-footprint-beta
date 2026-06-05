@@ -297,6 +297,7 @@
       padding: 0 14px;
       border-radius: var(--radius);
       font-weight: 850;
+      text-decoration: none;
     }
     .solid-btn, .action-btn {
       background: linear-gradient(180deg, var(--orange-2), var(--orange));
@@ -613,6 +614,9 @@
       padding: 14px 16px 112px;
       text-shadow: 0 5px 18px rgba(0,0,0,0.6);
     }
+    .poster-preview.has-runner-photo .poster-main-copy h1 {
+      max-width: calc(100% - 128px);
+    }
     .poster-main-copy h1 {
       margin: 0;
       max-width: calc(100% - 112px);
@@ -709,6 +713,7 @@
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      max-width: 100%;
       margin-top: 10px;
       padding: 5px 9px;
       border: 1px solid rgba(243,106,23,0.28);
@@ -717,6 +722,7 @@
       background: rgba(16,20,17,0.64);
       font-size: 12px;
       font-weight: 900;
+      white-space: nowrap;
     }
     .poster-subline {
       margin-top: 14px;
@@ -726,12 +732,24 @@
       font-weight: 900;
       line-height: 1.25;
     }
+    .poster-preview.has-runner-photo .poster-subline {
+      max-width: calc(100% - 176px);
+    }
     .poster-foot {
       margin-top: 8px;
       max-width: calc(100% - 112px);
       color: #ffe5c6;
-      font-size: 14px;
+      font-size: 13px;
       line-height: 1.48;
+    }
+    .poster-preview.has-runner-photo .poster-foot {
+      max-width: calc(100% - 176px);
+    }
+    .poster-foot span {
+      display: block;
+    }
+    .poster-nowrap {
+      white-space: nowrap;
     }
     .poster-stamp {
       position: absolute;
@@ -802,6 +820,35 @@
         linear-gradient(180deg, rgba(2,3,2,0.04), rgba(2,3,2,0.82));
       mix-blend-mode: multiply;
     }
+    .poster-runner-photo {
+      position: absolute;
+      right: 76px;
+      bottom: 104px;
+      z-index: 2;
+      width: 164px;
+      height: 238px;
+      overflow: hidden;
+      border: 1px solid rgba(255,232,184,0.3);
+      border-radius: 18px;
+      background: rgba(6,8,7,0.42);
+      box-shadow: 0 20px 42px rgba(0,0,0,0.42);
+      pointer-events: none;
+      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 78%, transparent 100%);
+      mask-image: linear-gradient(180deg, #000 0%, #000 78%, transparent 100%);
+    }
+    .poster-runner-photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: saturate(0.92) contrast(1.06) brightness(0.86);
+    }
+    .poster-runner-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(2,3,2,0.28), transparent 34%, rgba(243,106,23,0.12));
+      mix-blend-mode: multiply;
+    }
     .poster-medal-large {
       position: absolute;
       right: 18px;
@@ -832,6 +879,13 @@
         radial-gradient(circle at 32% 24%, rgba(255,241,197,0.68), transparent 24%),
         linear-gradient(135deg, rgba(122,84,43,0.96), rgba(214,165,83,0.9) 48%, rgba(61,43,24,0.96));
       box-shadow: inset 0 0 0 7px rgba(0,0,0,0.14), 0 12px 24px rgba(0,0,0,0.35);
+    }
+    .poster-preview.has-runner-photo .poster-medal-large,
+    .poster-preview.has-runner-photo .poster-medal-photo {
+      right: 18px;
+      bottom: 126px;
+      width: 76px;
+      height: 76px;
     }
     .poster-medal-photo img {
       width: 100%;
@@ -1387,6 +1441,25 @@
       return result.eventName || event.name || `${result.city || "完赛"}${result.distance === "半马" ? "半程马拉松" : "马拉松"}`;
     }
 
+    function posterLineHtml(text) {
+      const value = String(text || "").trim();
+      const matched = value.match(/^(.*[，,])([^，,]{2,8}[。.!?]?)$/);
+      if (!matched) return safe(value);
+      return `${safe(matched[1])}<span class="poster-nowrap">${safe(matched[2])}</span>`;
+    }
+
+    function posterFootHtml(copy) {
+      return [copy.line, copy.styleLine, copy.foot]
+        .filter(Boolean)
+        .map(line => `<span>${posterLineHtml(line)}</span>`)
+        .join("");
+    }
+
+    function safeExternalUrl(value) {
+      const text = String(value || "").trim();
+      return /^https?:\/\//i.test(text) ? text : "";
+    }
+
     function eventAssets(event) {
       return [
         ["路线图", `${event.city}城市路线`],
@@ -1621,6 +1694,18 @@
       return parseRankFromText(text, ["年龄组排名", "年龄组名次", "年龄排名", "年龄名次", "分组排名", "分组名次", "组别排名", "组别名次", "age group", "age"]);
     }
 
+    function parseBibNumberFromText(text) {
+      const value = normalizeScoreText(text);
+      const matched = value.match(/(?:参赛号码|参赛号|号码布|bib no\.?|bib number|bib)[^\w\u4e00-\u9fa5]{0,12}([A-Z]?\d{3,6})/i);
+      return matched ? matched[1].toUpperCase() : "";
+    }
+
+    function parseElevationFromText(text) {
+      const value = normalizeScoreText(text);
+      const matched = value.match(/(?:累计爬升|总爬升|爬升|海拔增益|elevation gain|gain)[^\d]{0,18}(\d{1,5})\s*(?:m|米)?/i);
+      return matched ? matched[1] : "";
+    }
+
     function parseDistanceFromText(text, event) {
       const value = normalizeScoreText(text).toLowerCase();
       if (/半程|半马|half|21\.?0975?|21k/.test(value)) return "半马";
@@ -1640,6 +1725,8 @@
         rank: parseOverallRankFromText(normalized),
         genderRank: parseGenderRankFromText(normalized),
         ageRank: parseAgeRankFromText(normalized),
+        bibNumber: parseBibNumberFromText(normalized),
+        elevationGain: parseElevationFromText(normalized),
         text: normalized
       };
     }
@@ -1658,13 +1745,17 @@
       if (result.rank) form.rank.value = result.rank;
       if (result.genderRank) form.genderRank.value = result.genderRank;
       if (result.ageRank) form.ageRank.value = result.ageRank;
+      if (result.bibNumber && form.bibNumber) form.bibNumber.value = result.bibNumber;
+      if (result.elevationGain && form.elevationGain) form.elevationGain.value = result.elevationGain;
 
       const found = [
         result.event ? result.event.city : "",
         result.time ? `成绩 ${result.time}` : "",
         result.rank ? `总排名 ${result.rank}` : "",
         result.genderRank ? `性别排名 ${result.genderRank}` : "",
-        result.ageRank ? `年龄排名 ${result.ageRank}` : ""
+        result.ageRank ? `年龄排名 ${result.ageRank}` : "",
+        result.bibNumber ? `参赛号 ${result.bibNumber}` : "",
+        result.elevationGain ? `爬升 ${result.elevationGain}m` : ""
       ].filter(Boolean);
 
       if (result.event) {
@@ -2085,12 +2176,19 @@
     }
 
     function raceRow(result, single = false) {
+      const details = [
+        result.date,
+        result.distance,
+        result.pace,
+        result.elevationGain ? `爬升 ${result.elevationGain}m` : "",
+        result.bibNumber ? `BIB ${result.bibNumber}` : ""
+      ].filter(Boolean).join(" · ");
       return `
         <button class="card race-row" type="button" data-result-id="${safe(result.id)}" data-view="poster">
           <div class="${medalClass(result)}" aria-hidden="true"></div>
           <div>
             <h3>${safe(result.eventName)} | ${safe(result.city)}</h3>
-            <p>${safe(result.date)} · ${safe(result.distance)} · ${safe(result.pace)}</p>
+            <p>${safe(details)}</p>
             <div class="race-time">${safe(result.time)}</div>
             <div class="runner-meta">
               ${result.pb ? tag("PB", "orange") : ""}
@@ -2126,11 +2224,16 @@
 
     function renderCommunity() {
       const event = db.events.find(item => item.id === state.selectedEventId) || db.events[0];
-      const posts = db.posts
-        .filter(post => post.eventId === event.id && (state.feedTab === "all" || post.topic === state.feedTab))
+      const eventPosts = db.posts.filter(post => post.eventId === event.id);
+      const posts = eventPosts
+        .filter(post => state.feedTab === "all" || post.topic === state.feedTab)
         .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
         .slice(0, 18);
-      const participants = new Set(db.results.filter(result => result.eventId === event.id).map(result => result.userId));
+      const eventResults = db.results.filter(result => result.eventId === event.id);
+      const participants = new Set(eventResults.map(result => result.userId));
+      const hotPost = eventPosts.slice().sort((a, b) => (b.likes + b.comments * 2) - (a.likes + a.comments * 2))[0];
+      const photoPosts = eventPosts.filter(post => post.topic === "photo").length;
+      const bestSameRace = eventResults.slice().sort((a, b) => a.seconds - b.seconds)[0];
       return `
         <div class="stack">
           <section class="card race-row" style="grid-template-columns:1fr auto">
@@ -2144,6 +2247,12 @@
             <select data-select-event>
               ${db.events.map(item => `<option value="${safe(item.id)}" ${item.id === event.id ? "selected" : ""}>${safe(item.name)} · ${safe(item.date)}</option>`).join("")}
             </select>
+          </div>
+          <div class="grid-2">
+            <section class="card metric-card"><span>热度榜</span><b>${hotPost ? "TOP 1" : "-"}</b><small>${hotPost ? safe(hotPost.topic === "photo" ? "照片分享最热" : hotPost.topic === "pb" ? "PB话题最热" : "同场讨论最热") : "等第一条动态"}</small></section>
+            <section class="card metric-card"><span>同场跑友</span><b>${participants.size}</b><small>已有完赛记录</small></section>
+            <section class="card metric-card"><span>晒图内容</span><b>${photoPosts}</b><small>照片会优先进入海报</small></section>
+            <section class="card metric-card"><span>同场最快</span><b>${safe(bestSameRace?.time || "-")}</b><small>${bestSameRace ? safe(bestSameRace.eventName) : "等待成绩"}</small></section>
           </div>
           <div class="feed-tabs">
             ${[["all", "全部"], ["pb", "PB报喜"], ["route", "赛道吐槽"], ["supply", "补给评价"], ["photo", "照片分享"]].map(([id, label]) => `<button class="${state.feedTab === id ? "is-active" : ""}" type="button" data-feed-tab="${id}">${label}</button>`).join("")}
@@ -2277,8 +2386,30 @@
                 <input name="ageRank" placeholder="156 / 2341" value="${safe(editingResult?.ageRank || "")}">
               </div>
             </div>
+            <div class="split">
+              <div class="field">
+                <label>参赛号</label>
+                <input name="bibNumber" placeholder="B13160" value="${safe(editingResult?.bibNumber || "")}">
+                <small>后续可用于记录赛事相册搜索入口。</small>
+              </div>
+              <div class="field">
+                <label>爬升</label>
+                <input name="elevationGain" inputmode="numeric" placeholder="例如 330" value="${safe(editingResult?.elevationGain || "")}">
+                <small>路线图能读到就自动填，识别不到可手动补，单位 m。</small>
+              </div>
+            </div>
+            <div class="field">
+              <label>赛事相册入口</label>
+              <input name="photoAlbumUrl" placeholder="粘贴官方相册 / 照片搜索链接，可留空" value="${safe(editingResult?.photoAlbumUrl || "")}">
+              <small>先记录入口，不上传人脸信息，也不主动抓取第三方照片。</small>
+            </div>
             <div class="form-section">可选素材 <span>传了会让海报和档案更丰富</span></div>
             <div class="asset-upload-grid">
+              <div class="asset-upload">
+                <label>个人照片</label>
+                <input name="runnerPhoto" type="file" accept="image/*" data-asset-file data-asset-type="runnerPhoto">
+                <small>海报优先用作主视觉</small>
+              </div>
               <div class="asset-upload">
                 <label>赛事路线图</label>
                 <input name="routeImage" type="file" accept="image/*" data-asset-file data-asset-type="routeImage">
@@ -2360,12 +2491,15 @@
       const year = result.date.slice(0, 4);
       const eventTitle = posterEventTitle(result, event);
       const distanceLabel = result.distance === "半马" ? "半马成绩" : "全马成绩";
+      const badgeText = [distanceLabel, result.pace, result.elevationGain ? `爬升 ${result.elevationGain}m` : ""].filter(Boolean).join(" · ");
       const assets = result.assets || {};
+      const hasRunnerPhoto = Boolean(assets.runnerPhoto?.dataUrl);
+      const photoAlbumUrl = safeExternalUrl(result.photoAlbumUrl);
       return `
         <div class="stack">
           <section class="card poster-card">
             <div class="poster-stage">
-              <div class="poster-preview">
+              <div class="poster-preview ${hasRunnerPhoto ? "has-runner-photo" : ""}">
                 <span class="poster-kicker">生成完赛海报</span>
                 ${assets.routeImage?.dataUrl ? `
                   <div class="poster-route-art" aria-hidden="true">
@@ -2378,12 +2512,17 @@
                     <circle cx="146" cy="34" r="6" fill="#ff8b35"></circle>
                   </svg>
                 `}
+                ${hasRunnerPhoto ? `
+                  <div class="poster-runner-photo" aria-hidden="true">
+                    <img src="${safe(assets.runnerPhoto.dataUrl)}" alt="">
+                  </div>
+                ` : ""}
                 <div class="poster-main-copy">
                   <h1><span>${safe(year)}</span><br>${safe(eventTitle)}</h1>
-                  <div class="poster-distance-badge">${safe(distanceLabel)}${result.pace ? ` · ${safe(result.pace)}` : ""}</div>
+                  <div class="poster-distance-badge">${safe(badgeText)}</div>
                   <div class="poster-time">${safe(result.time)}</div>
                   <div class="poster-subline">${safe(copy.title)} · ${safe(result.level)}</div>
-                  <p class="poster-foot">${safe(copy.line)}<br>${safe(copy.styleLine)}<br>${safe(copy.foot)}</p>
+                  <p class="poster-foot">${posterFootHtml(copy)}</p>
                 </div>
                 <div class="poster-stamp">${safe(event.city || result.city)}<br>${safe(year)}</div>
                 ${assets.medalImage?.dataUrl ? `
@@ -2405,6 +2544,7 @@
             <button class="action-btn" type="button" data-action="save-poster">保存海报</button>
             <button class="ghost-btn" type="button" data-action="share-profile">分享主页</button>
           </div>
+          ${photoAlbumUrl ? `<a class="ghost-btn" href="${safe(photoAlbumUrl)}" target="_blank" rel="noopener">查赛事照片</a>` : ""}
           <div class="primary-actions">
             <button class="ghost-btn" type="button" data-action="edit-result" data-result-id="${safe(result.id)}">编辑记录</button>
             <button class="danger-btn" type="button" data-action="delete-result" data-result-id="${safe(result.id)}">删除记录</button>
@@ -2688,6 +2828,9 @@
           rank: String(values.rank || `- / ${eventInfo.capacity}`),
           genderRank: String(values.genderRank || "-"),
           ageRank: String(values.ageRank || "-"),
+          bibNumber: String(values.bibNumber || "").trim(),
+          elevationGain: String(values.elevationGain || "").trim().replace(/[^\d.]/g, ""),
+          photoAlbumUrl: String(values.photoAlbumUrl || "").trim(),
           level: calculatedLevel === "待补充档案" ? String(values.level || calculatedLevel) : calculatedLevel,
           official: values.official === "true",
           pb: !previousBest || seconds < previousBest.seconds,

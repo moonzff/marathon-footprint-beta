@@ -42,9 +42,13 @@ assert(html.includes("function roadLevelFor"), "public road level must be calcul
 assert(html.includes('name="birthDate"'), "runner profile must collect birthday for level calculation");
 assert(html.includes('name="gender"'), "runner profile must collect gender for level calculation");
 assert(html.includes('name="routeImage"'), "optional route image upload slot is missing");
+assert(html.includes('name="runnerPhoto"'), "optional runner photo upload slot is missing");
 assert(html.includes('name="shirtImage"'), "optional race shirt upload slot is missing");
 assert(html.includes('name="medalImage"'), "optional medal upload slot is missing");
 assert(html.includes('name="bibImage"'), "optional bib upload slot is missing");
+assert(html.includes('name="bibNumber"'), "bib number field is missing");
+assert(html.includes('name="elevationGain"'), "elevation gain field is missing");
+assert(html.includes('name="photoAlbumUrl"'), "official photo album URL field is missing");
 
 const reportStart = html.indexOf("function renderReport()");
 const reportEnd = html.indexOf("function renderSettings()", reportStart);
@@ -67,8 +71,15 @@ assert(!html.includes('url("assets/memorial-ui-06-poster-maker.jpg")'), "poster 
 assert(html.includes("function posterEventTitle"), "poster title must use the recorded race name instead of city-only naming");
 assert(!html.includes("${safe(result.city)}马拉松"), "poster must not rewrite special races like 湘江半程马拉松 into city + 马拉松");
 assert(html.includes("poster-route-art"), "uploaded route maps should be treated as poster art rather than pasted raw screenshots");
+assert(html.includes("poster-runner-photo"), "uploaded personal photos should become poster hero material");
 assert(html.includes("poster-distance-badge"), "poster must label full marathon versus half marathon results");
+assert(html.includes("function posterLineHtml"), "poster copy must protect against orphan characters");
+assert(html.includes("poster-nowrap"), "poster copy must include no-wrap spans for short ending phrases");
 assert(html.includes("function compressImageForAsset"), "uploaded poster assets should be compressed and retained for poster rendering");
+assert(html.includes("function parseBibNumberFromText"), "OCR must parse bib numbers when visible");
+assert(html.includes("function parseElevationFromText"), "OCR must parse elevation gain when route text exposes it");
+assert(html.includes("function safeExternalUrl"), "external photo album links must be protocol-checked");
+assert(html.includes("查赛事照片"), "poster view must expose recorded race photo album links");
 assert(!html.includes("poster-asset-row"), "poster should not show collected-asset badges that collide with copy");
 assert(html.includes("18 + Math.min(city.count, 6) * 2"), "map city markers must be smaller on mobile");
 
@@ -188,11 +199,15 @@ function renderXiangmaPosterSample() {
         rank: "8537 / 15000",
         genderRank: "6945",
         ageRank: "",
+        bibNumber: "B13160",
+        elevationGain: "330",
+        photoAlbumUrl: "https://example.com/photos",
         level: "待补充档案",
         official: true,
         pb: false,
         medal: "gold",
         assets: {
+          runnerPhoto: { name: "runner.jpg", dataUrl: "data:image/jpeg;base64,RUNNER" },
           routeImage: { name: "route.jpg", dataUrl: "data:image/jpeg;base64,ROUTE" },
           medalImage: { name: "medal.jpg", dataUrl: "data:image/jpeg;base64,MEDAL" }
         }
@@ -213,6 +228,7 @@ const xiangmaCertificateText = `
 枪声成绩 02:22:12
 净计时成绩 02:16:56
 平均配速 00:06:29
+累计爬升 330m
 性别排名 / GENDER PLACE
 枪声成绩 7093 名
 净计时成绩 6945 名
@@ -225,11 +241,17 @@ assert(xiangmaParsed.event?.id === "xiangjiang-half-2026", "Xiangjiang certifica
 assert(xiangmaParsed.time === "2:16:56", "certificate parser must prefer net time over gun time");
 assert(xiangmaParsed.genderRank === "6945", "gender ranking must prefer net-time gender place");
 assert(xiangmaParsed.rank === "8537", "overall ranking must prefer net-time overall place");
+assert(xiangmaParsed.bibNumber === "B13160", "certificate parser must capture bib number");
+assert(xiangmaParsed.elevationGain === "330", "route text parser must capture elevation gain when present");
 
 const xiangmaPoster = renderXiangmaPosterSample();
 assert(xiangmaPoster.includes("湘江半程马拉松"), "Xiangjiang poster must show the actual race name");
 assert(!xiangmaPoster.includes("长沙马拉松"), "Xiangjiang poster must not be renamed to Changsha Marathon");
 assert(xiangmaPoster.includes("半马成绩"), "Xiangjiang half poster must explicitly label the result as half marathon");
+assert(xiangmaPoster.includes("爬升 330m"), "poster must surface elevation gain when recorded");
+assert(xiangmaPoster.includes("poster-runner-photo"), "runner photo must become the poster hero layer");
+assert(xiangmaPoster.includes("data:image/jpeg;base64,RUNNER"), "runner photo upload must be used in the poster");
+assert(xiangmaPoster.includes("查赛事照片"), "poster must offer the saved race photo album entry");
 assert(xiangmaPoster.includes("poster-route-art"), "route upload must render through the stylized poster art layer");
 assert(xiangmaPoster.includes("data:image/jpeg;base64,MEDAL"), "medal upload must be used in the poster instead of the default medal");
 assert(!xiangmaPoster.includes("路线图已收录") && !xiangmaPoster.includes("奖牌已收录"), "poster must not print collected asset badges over the design");

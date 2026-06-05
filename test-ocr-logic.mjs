@@ -85,6 +85,13 @@ assert(html.includes("aspect-ratio: 4 / 5"), "poster artwork must follow the 160
 assert(html.includes("poster-meta-grid"), "poster must include a Lovart-style race metadata footer");
 assert(html.includes("poster-controls"), "poster template controls must move outside the poster artwork");
 assert(html.includes("<!-- /poster-preview -->"), "poster markup must expose the artwork boundary for regression checks");
+assert(html.includes("poster-title-lockup"), "poster title needs a stable hero lockup to avoid orphan title wrapping");
+assert(html.includes("poster-event-name"), "poster event name needs a dedicated responsive fitting class");
+assert(html.includes("poster-time-block"), "poster time must be isolated as a left-side visual block");
+assert(html.includes("poster-photo-focus-main-runner"), "cutout runner photos must bias the crop toward the primary foreground runner");
+assert(html.includes("poster-medal-badge"), "uploaded medal art must render as a compact badge, not a pasted full screenshot");
+assert(html.includes("function downloadPosterPreview"), "save poster must export the poster artwork instead of only showing a toast");
+assert(html.includes('document.querySelector(".poster-preview")'), "poster export must target only the poster-preview boundary");
 assert(html.includes("function posterLineHtml"), "poster copy must protect against orphan characters");
 assert(html.includes("poster-nowrap"), "poster copy must include no-wrap spans for short ending phrases");
 assert(html.includes("function compressImageForAsset"), "uploaded poster assets should be compressed and retained for poster rendering");
@@ -268,6 +275,11 @@ assert(xiangmaPoster.includes("查赛事照片"), "poster must offer the saved r
 assert(xiangmaPoster.includes("poster-route-art"), "route upload must render through the stylized poster art layer");
 assert(xiangmaPoster.includes("data:image/jpeg;base64,MEDAL"), "medal upload must be used in the poster instead of the default medal");
 assert(xiangmaPoster.includes("poster-meta-grid"), "poster must render the race metadata footer");
+assert(xiangmaPoster.includes("poster-title-lockup"), "poster sample must render the locked title block");
+assert(xiangmaPoster.includes("poster-event-name"), "poster sample must render a responsive event-name block");
+assert(xiangmaPoster.includes("poster-time-block"), "poster sample must render time as an isolated visual block");
+assert(xiangmaPoster.includes("poster-photo-focus-main-runner"), "poster sample must apply primary-runner crop bias to cutout photos");
+assert(xiangmaPoster.includes("poster-medal-badge"), "poster sample must render uploaded medal as a compact badge");
 assert(xiangmaPoster.includes("2026-04-26"), "poster metadata must include the race date");
 assert(xiangmaPoster.includes("B13160"), "poster metadata must include the bib number when recorded");
 assert(xiangmaPoster.includes("poster-controls"), "poster template controls must render outside the poster artwork");

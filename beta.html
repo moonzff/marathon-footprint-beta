@@ -22,6 +22,9 @@
       --blue: #4b95ff;
       --green: #35c875;
       --red: #e85a4f;
+      --poster-green-bg: #1A2F23;
+      --poster-green-accent: #7CB342;
+      --poster-green-secondary: #4A5D4E;
       --radius: 8px;
       --shadow: 0 20px 70px rgba(0, 0, 0, 0.45);
       font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Segoe UI", sans-serif;
@@ -558,82 +561,106 @@
       padding: 12px;
       overflow: hidden;
       background:
-        radial-gradient(circle at 12% 8%, rgba(243,106,23,0.2), transparent 12rem),
+        radial-gradient(circle at 12% 8%, rgba(124,179,66,0.16), transparent 12rem),
         linear-gradient(180deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02)),
         #070908;
     }
     .poster-stage {
       position: relative;
-      min-height: 590px;
       padding: 10px;
       border-radius: 14px;
       background:
-        linear-gradient(90deg, rgba(255,255,255,0.1), transparent 14%, transparent 86%, rgba(255,255,255,0.08)),
-        #020302;
+        linear-gradient(90deg, rgba(255,255,255,0.09), transparent 16%, transparent 84%, rgba(255,255,255,0.06)),
+        #030605;
       box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08), 0 22px 48px rgba(0,0,0,0.4);
     }
     .poster-preview {
       position: relative;
-      min-height: 510px;
+      aspect-ratio: 4 / 5;
       overflow: hidden;
-      border: 1px solid rgba(217,179,116,0.34);
+      border: 1px solid rgba(181,203,147,0.28);
       border-radius: 10px;
       background:
-        radial-gradient(circle at 78% 22%, rgba(243,106,23,0.28), transparent 9rem),
-        radial-gradient(circle at 22% 68%, rgba(217,179,116,0.16), transparent 11rem),
-        linear-gradient(180deg, rgba(17,23,20,0.88), rgba(2,3,2,0.96)),
-        #050706;
+        radial-gradient(circle at 86% 10%, rgba(181,203,147,0.12), transparent 9rem),
+        radial-gradient(circle at 70% 56%, rgba(67,119,86,0.22), transparent 12rem),
+        linear-gradient(180deg, rgba(26,47,35,0.96), rgba(1,9,8,0.99)),
+        var(--poster-green-bg);
+    }
+    .poster-preview::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(124,179,66,0.12), transparent 1px) 0 0 / 56px 100%,
+        linear-gradient(180deg, rgba(124,179,66,0.08), transparent 1px) 0 0 / 100% 62px,
+        radial-gradient(circle at 72% 46%, rgba(124,179,66,0.16), transparent 11rem);
+      opacity: 0.22;
+      pointer-events: none;
     }
     .poster-preview::after {
       content: "";
       position: absolute;
       inset: 0;
       background:
-        linear-gradient(90deg, rgba(255,255,255,0.16), transparent 1px) 0 0 / 52px 100%,
-        linear-gradient(180deg, transparent 72%, rgba(0,0,0,0.72));
-      mix-blend-mode: screen;
-      opacity: 0.12;
+        linear-gradient(180deg, transparent 62%, rgba(0,0,0,0.66) 91%),
+        linear-gradient(90deg, rgba(0,0,0,0.28), transparent 52%, rgba(0,0,0,0.18));
+      opacity: 0.82;
       pointer-events: none;
     }
     .poster-kicker {
-      position: relative;
-      z-index: 2;
+      position: absolute;
+      left: 18px;
+      top: 18px;
+      z-index: 6;
       display: inline-flex;
-      margin: 14px 0 0 16px;
-      padding: 5px 9px;
-      border: 1px solid rgba(255,255,255,0.13);
+      padding: 5px 10px;
+      border: 1px solid rgba(124,179,66,0.28);
       border-radius: 999px;
-      color: #ffe8c8;
-      background: rgba(0,0,0,0.34);
-      font-size: 11px;
+      color: rgba(235,244,207,0.92);
+      background: rgba(1,9,8,0.5);
+      font-size: 10px;
       font-weight: 850;
+      letter-spacing: 0.08em;
     }
     .poster-main-copy {
-      position: relative;
+      position: absolute;
+      inset: 0;
       z-index: 3;
-      padding: 14px 16px 112px;
-      text-shadow: 0 5px 18px rgba(0,0,0,0.6);
+      padding: 46px 18px 126px;
+      text-shadow: 0 7px 20px rgba(0,0,0,0.58);
     }
     .poster-preview.has-runner-photo .poster-main-copy h1 {
-      max-width: calc(100% - 118px);
+      max-width: 72%;
     }
     .poster-preview.has-cutout-photo .poster-main-copy h1 {
-      max-width: calc(100% - 98px);
+      max-width: 72%;
     }
     .poster-main-copy h1 {
       margin: 0;
-      max-width: calc(100% - 112px);
-      color: #fff9ea;
-      font-size: clamp(30px, 8.8vw, 46px);
+      max-width: 84%;
+      color: #fff8e8;
+      font-size: clamp(25px, 7.4vw, 35px);
       line-height: 0.98;
       font-weight: 950;
       letter-spacing: 0;
-      text-wrap: balance;
     }
     .poster-main-copy h1 span {
-      display: inline-block;
-      margin-bottom: 2px;
-      font-size: 1.16em;
+      display: block;
+      margin-bottom: 10px;
+      color: #f7f1df;
+      font-size: clamp(78px, 25vw, 116px);
+      line-height: 0.78;
+      letter-spacing: 0;
+    }
+    .poster-title-en {
+      display: block;
+      margin-top: 7px;
+      max-width: 66%;
+      color: rgba(124,179,66,0.9);
+      font-size: 10px;
+      font-weight: 850;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
     .insight-card {
       padding: 13px;
@@ -705,9 +732,10 @@
       line-height: 1.35;
     }
     .poster-time {
-      margin-top: 14px;
-      color: #fff2d7;
-      font-size: clamp(50px, 15.4vw, 70px);
+      margin-top: 20px;
+      max-width: 58%;
+      color: rgba(124,179,66,0.96);
+      font-size: clamp(56px, 16.5vw, 82px);
       font-weight: 950;
       line-height: 0.9;
       letter-spacing: 0;
@@ -717,42 +745,44 @@
       align-items: center;
       gap: 6px;
       max-width: 100%;
-      margin-top: 10px;
-      padding: 5px 9px;
-      border: 1px solid rgba(243,106,23,0.28);
-      border-radius: 999px;
-      color: #ff9b45;
-      background: rgba(16,20,17,0.64);
-      font-size: 12px;
+      margin-top: 12px;
+      padding-top: 9px;
+      border-top: 1px solid rgba(124,179,66,0.42);
+      color: rgba(124,179,66,0.92);
+      font-size: 11px;
       font-weight: 900;
       white-space: nowrap;
     }
     .poster-subline {
-      margin-top: 14px;
-      max-width: calc(100% - 112px);
+      position: absolute;
+      left: 18px;
+      bottom: 78px;
+      max-width: calc(100% - 132px);
       color: #fff7df;
-      font-size: 19px;
+      font-size: 18px;
       font-weight: 900;
       line-height: 1.25;
     }
     .poster-preview.has-runner-photo .poster-subline {
-      max-width: calc(100% - 202px);
+      max-width: calc(100% - 150px);
     }
     .poster-preview.has-cutout-photo .poster-subline {
-      max-width: calc(100% - 174px);
+      max-width: calc(100% - 150px);
     }
     .poster-foot {
-      margin-top: 8px;
-      max-width: calc(100% - 112px);
-      color: #ffe5c6;
-      font-size: 13px;
-      line-height: 1.48;
+      position: absolute;
+      left: 18px;
+      bottom: 52px;
+      max-width: calc(100% - 132px);
+      color: rgba(235,244,207,0.78);
+      font-size: 11px;
+      line-height: 1.36;
     }
     .poster-preview.has-runner-photo .poster-foot {
-      max-width: calc(100% - 202px);
+      max-width: calc(100% - 150px);
     }
     .poster-preview.has-cutout-photo .poster-foot {
-      max-width: calc(100% - 184px);
+      max-width: calc(100% - 150px);
     }
     .poster-foot span {
       display: block;
@@ -762,62 +792,67 @@
     }
     .poster-stamp {
       position: absolute;
-      right: 24px;
-      top: 58px;
-      z-index: 4;
+      right: 20px;
+      top: 22px;
+      z-index: 6;
       display: grid;
       place-items: center;
-      width: 74px;
-      height: 74px;
-      border: 2px solid rgba(243,106,23,0.66);
+      width: 70px;
+      height: 70px;
+      border: 2px solid rgba(124,179,66,0.62);
       border-radius: 999px;
-      color: #ff8b35;
-      background: rgba(5,7,6,0.46);
-      font-size: 13px;
+      color: rgba(210,235,176,0.9);
+      background: rgba(3,19,16,0.48);
+      font-size: 12px;
       font-weight: 950;
       text-align: center;
       line-height: 1.12;
-      transform: rotate(-10deg);
     }
     .poster-route {
       position: absolute;
-      right: 24px;
-      top: 132px;
+      right: -18px;
+      top: 142px;
       z-index: 1;
-      width: 164px;
-      height: 126px;
-      opacity: 0.82;
+      width: 246px;
+      height: 310px;
+      opacity: 0.62;
     }
     .poster-route path {
       fill: none;
-      stroke: var(--orange-2);
-      stroke-width: 4;
+      stroke: rgba(124,179,66,0.82);
+      stroke-width: 5;
       stroke-linecap: round;
-      stroke-dasharray: 6 8;
     }
     .poster-route-art {
       position: absolute;
-      right: -18px;
-      top: 118px;
+      right: -34px;
+      top: 104px;
+      bottom: 118px;
       z-index: 1;
-      width: 224px;
-      height: 166px;
+      width: 76%;
+      height: auto;
       overflow: hidden;
-      border: 1px solid rgba(217,179,116,0.24);
-      border-radius: 12px;
-      background: rgba(243,106,23,0.12);
-      box-shadow: 0 18px 38px rgba(0,0,0,0.32);
-      opacity: 0.52;
-      transform: rotate(-4deg);
+      border: 0;
+      border-radius: 0;
+      background: rgba(124,179,66,0.08);
+      box-shadow: none;
+      opacity: 0.42;
+      transform: none;
       pointer-events: none;
-      -webkit-mask-image: linear-gradient(115deg, transparent 0%, #000 20%, #000 78%, transparent 100%);
-      mask-image: linear-gradient(115deg, transparent 0%, #000 20%, #000 78%, transparent 100%);
+      -webkit-mask-image:
+        radial-gradient(ellipse at 58% 46%, #000 0%, rgba(0,0,0,0.82) 52%, transparent 82%),
+        linear-gradient(90deg, transparent 0%, #000 18%, #000 100%);
+      -webkit-mask-composite: source-in;
+      mask-image:
+        radial-gradient(ellipse at 58% 46%, #000 0%, rgba(0,0,0,0.82) 52%, transparent 82%),
+        linear-gradient(90deg, transparent 0%, #000 18%, #000 100%);
+      mask-composite: intersect;
     }
     .poster-route-art img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      filter: grayscale(0.92) sepia(0.42) saturate(1.35) contrast(1.18) brightness(0.64);
+      filter: grayscale(1) sepia(0.38) hue-rotate(42deg) saturate(1.2) contrast(1.18) brightness(0.6);
       mix-blend-mode: screen;
     }
     .poster-route-art::after {
@@ -831,13 +866,13 @@
     }
     .poster-runner-photo {
       position: absolute;
-      right: 72px;
-      bottom: 80px;
-      z-index: 2;
-      width: 214px;
-      height: 330px;
+      right: -18px;
+      bottom: 48px;
+      z-index: 5;
+      width: 216px;
+      height: 356px;
       pointer-events: none;
-      filter: drop-shadow(0 22px 18px rgba(0,0,0,0.58));
+      filter: drop-shadow(0 28px 22px rgba(0,0,0,0.64));
       -webkit-mask-image:
         radial-gradient(ellipse at 54% 48%, #000 0%, #000 48%, rgba(0,0,0,0.92) 62%, transparent 83%),
         linear-gradient(180deg, #000 0%, #000 86%, transparent 100%);
@@ -852,7 +887,7 @@
       height: 100%;
       object-fit: contain;
       object-position: center bottom;
-      filter: saturate(0.98) contrast(1.06) brightness(0.9);
+      filter: saturate(1.03) contrast(1.08) brightness(0.94);
     }
     .poster-runner-photo::before {
       content: "";
@@ -867,14 +902,14 @@
       z-index: -1;
     }
     .poster-preview.has-cutout-photo .poster-runner-photo {
-      right: 48px;
-      bottom: 76px;
-      width: 242px;
-      height: 356px;
-      filter: drop-shadow(0 26px 20px rgba(0,0,0,0.66));
-      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 93%, transparent 100%);
+      right: -20px;
+      bottom: 46px;
+      width: 226px;
+      height: 374px;
+      filter: drop-shadow(0 30px 24px rgba(0,0,0,0.68));
+      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
       -webkit-mask-composite: initial;
-      mask-image: linear-gradient(180deg, #000 0%, #000 93%, transparent 100%);
+      mask-image: linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
       mask-composite: initial;
     }
     .poster-preview.has-cutout-photo .poster-runner-photo img {
@@ -884,18 +919,18 @@
     }
     .poster-preview.has-cutout-photo .poster-medal-large,
     .poster-preview.has-cutout-photo .poster-medal-photo {
-      right: 20px;
-      bottom: 114px;
-      width: 70px;
-      height: 70px;
+      right: 18px;
+      bottom: 58px;
+      width: 76px;
+      height: 76px;
     }
     .poster-medal-large {
       position: absolute;
       right: 18px;
-      bottom: 112px;
-      z-index: 2;
-      width: 92px;
-      height: 92px;
+      bottom: 58px;
+      z-index: 6;
+      width: 78px;
+      height: 78px;
       border-radius: 999px;
       background:
         radial-gradient(circle at 32% 24%, #fff1c5, transparent 23%),
@@ -906,10 +941,10 @@
     .poster-medal-photo {
       position: absolute;
       right: 18px;
-      bottom: 112px;
-      z-index: 2;
-      width: 92px;
-      height: 92px;
+      bottom: 58px;
+      z-index: 6;
+      width: 78px;
+      height: 78px;
       display: grid;
       place-items: center;
       padding: 7px;
@@ -923,14 +958,14 @@
     .poster-preview.has-runner-photo .poster-medal-large,
     .poster-preview.has-runner-photo .poster-medal-photo {
       right: 18px;
-      bottom: 118px;
-      width: 70px;
-      height: 70px;
+      bottom: 58px;
+      width: 76px;
+      height: 76px;
     }
     .poster-preview.has-runner-photo.has-cutout-photo .poster-medal-large,
     .poster-preview.has-runner-photo.has-cutout-photo .poster-medal-photo {
       right: 20px;
-      bottom: 114px;
+      bottom: 58px;
     }
     .poster-medal-photo img {
       width: 100%;
@@ -939,15 +974,53 @@
       border-radius: 999px;
       filter: saturate(0.96) contrast(1.04);
     }
-    .poster-template-row {
+    .poster-meta-grid {
       position: absolute;
-      left: 10px;
-      right: 10px;
+      left: 18px;
+      right: 108px;
       bottom: 14px;
-      z-index: 3;
+      z-index: 7;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px;
+      padding-top: 9px;
+      border-top: 1px solid rgba(124,179,66,0.45);
+    }
+    .poster-meta-item {
+      min-width: 0;
+      border-left: 1px solid rgba(124,179,66,0.28);
+      padding-left: 7px;
+    }
+    .poster-meta-item:first-child {
+      border-left: 0;
+      padding-left: 0;
+    }
+    .poster-meta-item span {
+      display: block;
+      color: rgba(124,179,66,0.72);
+      font-size: 8px;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .poster-meta-item b {
+      display: block;
+      margin-top: 3px;
+      overflow: hidden;
+      color: rgba(235,244,207,0.9);
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1.18;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .poster-template-row {
       display: grid;
       grid-template-columns: repeat(4, 1fr);
       gap: 8px;
+    }
+    .poster-controls {
+      padding: 10px 2px 0;
     }
     .poster-template {
       min-height: 58px;
@@ -2633,6 +2706,8 @@
       const year = result.date.slice(0, 4);
       const eventTitle = posterEventTitle(result, event);
       const distanceLabel = result.distance === "半马" ? "半马成绩" : "全马成绩";
+      const eventTitleEn = result.distance === "半马" ? "XIANGJIANG HALF MARATHON" : "MARATHON FINISHER";
+      const eventDistanceText = result.distance === "半马" ? "半程马拉松" : result.distance;
       const badgeText = [distanceLabel, result.pace, result.elevationGain ? `爬升 ${result.elevationGain}m` : ""].filter(Boolean).join(" · ");
       const assets = result.assets || {};
       const hasRunnerPhoto = Boolean(assets.runnerPhoto?.dataUrl);
@@ -2649,10 +2724,10 @@
                     <img src="${safe(assets.routeImage.dataUrl)}" alt="">
                   </div>
                 ` : `
-                  <svg class="poster-route" viewBox="0 0 160 120" aria-hidden="true">
-                    <path d="M10 90 C34 35 58 70 78 42 S118 18 146 34"></path>
-                    <circle cx="10" cy="90" r="6" fill="#35c875"></circle>
-                    <circle cx="146" cy="34" r="6" fill="#ff8b35"></circle>
+                  <svg class="poster-route" viewBox="0 0 180 260" aria-hidden="true">
+                    <path d="M38 236 C54 210 30 183 58 158 S96 128 76 98 S82 50 130 34 S160 55 142 92 S110 128 136 158 S162 210 118 236"></path>
+                    <circle cx="38" cy="236" r="5" fill="#7CB342"></circle>
+                    <circle cx="130" cy="34" r="5" fill="#7CB342"></circle>
                   </svg>
                 `}
                 ${hasRunnerPhoto ? `
@@ -2661,7 +2736,8 @@
                   </div>
                 ` : ""}
                 <div class="poster-main-copy">
-                  <h1><span>${safe(year)}</span><br>${safe(eventTitle)}</h1>
+                  <h1><span>${safe(year)}</span>${safe(eventTitle)}</h1>
+                  <span class="poster-title-en">${safe(eventTitleEn)}</span>
                   <div class="poster-distance-badge">${safe(badgeText)}</div>
                   <div class="poster-time">${safe(result.time)}</div>
                   <div class="poster-subline">${safe(copy.title)} · ${safe(result.level)}</div>
@@ -2673,6 +2749,14 @@
                     <img src="${safe(assets.medalImage.dataUrl)}" alt="完赛奖牌">
                   </div>
                 ` : `<div class="poster-medal-large" aria-hidden="true"></div>`}
+                <div class="poster-meta-grid">
+                  <div class="poster-meta-item"><span>比赛日期</span><b>${safe(result.date)}</b></div>
+                  <div class="poster-meta-item"><span>比赛项目</span><b>${safe(eventDistanceText)}</b></div>
+                  <div class="poster-meta-item"><span>参赛号码</span><b>${safe(result.bibNumber || "-")}</b></div>
+                  <div class="poster-meta-item"><span>城市</span><b>${safe(event.city || result.city || "-")}</b></div>
+                </div>
+              </div><!-- /poster-preview -->
+              <div class="poster-controls">
                 <div class="poster-template-row">
                   ${runnerGoals.map(goalItem => `
                     <button class="poster-template ${goal.id === goalItem.id ? "is-active" : ""}" type="button" data-poster-mode="${goalItem.id}">

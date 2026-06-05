@@ -80,6 +80,11 @@ assert(html.includes("aiCutout"), "runner photo assets must record AI cutout sta
 assert(html.includes("has-cutout-photo"), "poster must render a distinct layout for cutout runner photos");
 assert(html.includes("上传后会先智能抠图"), "runner photo upload copy must explain AI cutout behavior");
 assert(html.includes("poster-distance-badge"), "poster must label full marathon versus half marathon results");
+assert(html.includes("#1A2F23") && html.includes("#7CB342"), "poster must use the design spec dark green palette");
+assert(html.includes("aspect-ratio: 4 / 5"), "poster artwork must follow the 1600x2000 4:5 design spec");
+assert(html.includes("poster-meta-grid"), "poster must include a Lovart-style race metadata footer");
+assert(html.includes("poster-controls"), "poster template controls must move outside the poster artwork");
+assert(html.includes("<!-- /poster-preview -->"), "poster markup must expose the artwork boundary for regression checks");
 assert(html.includes("function posterLineHtml"), "poster copy must protect against orphan characters");
 assert(html.includes("poster-nowrap"), "poster copy must include no-wrap spans for short ending phrases");
 assert(html.includes("function compressImageForAsset"), "uploaded poster assets should be compressed and retained for poster rendering");
@@ -262,6 +267,11 @@ assert(xiangmaPoster.includes("data:image/png;base64,RUNNER"), "runner photo upl
 assert(xiangmaPoster.includes("查赛事照片"), "poster must offer the saved race photo album entry");
 assert(xiangmaPoster.includes("poster-route-art"), "route upload must render through the stylized poster art layer");
 assert(xiangmaPoster.includes("data:image/jpeg;base64,MEDAL"), "medal upload must be used in the poster instead of the default medal");
+assert(xiangmaPoster.includes("poster-meta-grid"), "poster must render the race metadata footer");
+assert(xiangmaPoster.includes("2026-04-26"), "poster metadata must include the race date");
+assert(xiangmaPoster.includes("B13160"), "poster metadata must include the bib number when recorded");
+assert(xiangmaPoster.includes("poster-controls"), "poster template controls must render outside the poster artwork");
+assert(xiangmaPoster.indexOf("poster-controls") > xiangmaPoster.indexOf("<!-- /poster-preview -->"), "poster controls must not sit inside the poster artwork");
 assert(!xiangmaPoster.includes("路线图已收录") && !xiangmaPoster.includes("奖牌已收录"), "poster must not print collected asset badges over the design");
 
 console.log("OCR regression checks passed");

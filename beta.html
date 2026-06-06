@@ -928,6 +928,31 @@
       object-fit: cover;
       object-position: 58% bottom;
     }
+    .poster-preview.has-raw-runner-photo .poster-runner-photo {
+      right: 12px;
+      bottom: 82px;
+      z-index: 3;
+      width: 124px;
+      height: 210px;
+      opacity: 0.86;
+      filter: drop-shadow(0 22px 20px rgba(0,0,0,0.62));
+      -webkit-mask-image:
+        radial-gradient(ellipse at 56% 48%, #000 0%, #000 42%, rgba(0,0,0,0.82) 58%, transparent 76%),
+        linear-gradient(180deg, transparent 0%, #000 10%, #000 86%, transparent 100%);
+      -webkit-mask-composite: source-in;
+      mask-image:
+        radial-gradient(ellipse at 56% 48%, #000 0%, #000 42%, rgba(0,0,0,0.82) 58%, transparent 76%),
+        linear-gradient(180deg, transparent 0%, #000 10%, #000 86%, transparent 100%);
+      mask-composite: intersect;
+    }
+    .poster-preview.has-raw-runner-photo .poster-runner-photo img {
+      width: 205%;
+      max-width: none;
+      object-fit: cover;
+      object-position: 53% center;
+      transform: translateX(-32%);
+      filter: saturate(1.02) contrast(1.08) brightness(0.88);
+    }
     .poster-runner-photo::before {
       content: "";
       position: absolute;
@@ -1193,6 +1218,12 @@
         bottom: 92px;
         width: 300px;
         height: 366px;
+      }
+      .poster-preview.has-raw-runner-photo .poster-runner-photo {
+        right: 8px;
+        bottom: 78px;
+        width: 112px;
+        height: 188px;
       }
       .poster-preview.has-cutout-photo .poster-time-block {
         left: 14px;
@@ -3238,12 +3269,13 @@
       const hasUsableCutout = Boolean(assets.runnerPhoto?.dataUrl && (assets.runnerPhoto?.cutout || assets.runnerPhoto?.aiCutout));
       const hasRunnerPhoto = Boolean(assets.runnerPhoto?.dataUrl);
       const hasCutoutPhoto = hasRunnerPhoto && Boolean(assets.runnerPhoto?.cutout || assets.runnerPhoto?.aiCutout);
+      const hasRawRunnerPhoto = hasRunnerPhoto && !hasCutoutPhoto;
       const photoAlbumUrl = safeExternalUrl(result.photoAlbumUrl);
       return `
         <div class="stack">
           <section class="card poster-card">
             <div class="poster-stage">
-              <div class="poster-preview ${hasRunnerPhoto ? "has-runner-photo" : ""} ${hasCutoutPhoto ? "has-cutout-photo" : ""}">
+              <div class="poster-preview ${hasRunnerPhoto ? "has-runner-photo" : ""} ${hasCutoutPhoto ? "has-cutout-photo" : ""} ${hasRawRunnerPhoto ? "has-raw-runner-photo" : ""}">
                 <span class="poster-kicker">生成完赛海报</span>
                 ${assets.routeImage?.dataUrl ? `
                   <div class="poster-route-art" aria-hidden="true">

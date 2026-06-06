@@ -122,6 +122,8 @@ assert(html.includes("poster-title-lockup"), "poster title needs a stable hero l
 assert(html.includes("poster-event-name"), "poster event name needs a dedicated responsive fitting class");
 assert(html.includes("poster-time-block"), "poster time must be isolated as a left-side visual block");
 assert(html.includes("poster-photo-focus-main-runner"), "cutout runner photos must bias the crop toward the primary foreground runner");
+assert(html.includes("has-raw-runner-photo"), "original runner photos must use a constrained crop instead of becoming poster background");
+assert(html.includes("width: 112px") && html.includes("height: 188px"), "raw runner photo layer must stay small enough to avoid covering title and score");
 assert(html.includes("poster-medal-badge"), "uploaded medal art must render as a compact badge, not a pasted full screenshot");
 const posterTimeBlockCss = html.slice(
   html.indexOf(".poster-time-block"),

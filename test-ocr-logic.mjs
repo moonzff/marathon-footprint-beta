@@ -90,6 +90,27 @@ assert(html.includes("poster-event-name"), "poster event name needs a dedicated 
 assert(html.includes("poster-time-block"), "poster time must be isolated as a left-side visual block");
 assert(html.includes("poster-photo-focus-main-runner"), "cutout runner photos must bias the crop toward the primary foreground runner");
 assert(html.includes("poster-medal-badge"), "uploaded medal art must render as a compact badge, not a pasted full screenshot");
+const posterTimeBlockCss = html.slice(
+  html.indexOf(".poster-time-block"),
+  html.indexOf(".poster-distance-badge")
+);
+assert(posterTimeBlockCss.includes("top: auto"), "poster time block must be bottom-anchored so it does not collide with copy");
+assert(posterTimeBlockCss.includes("bottom:"), "poster time block needs an explicit lower safe area");
+const posterFinishCopyCss = html.slice(
+  html.indexOf(".poster-finish-copy"),
+  html.indexOf(".poster-subline")
+);
+assert(posterFinishCopyCss.includes("bottom: 160px"), "poster finish copy must sit above the score block");
+const posterEventNameCss = html.slice(
+  html.indexOf(".poster-event-name"),
+  html.indexOf(".poster-title-en")
+);
+assert(!posterEventNameCss.includes("white-space: nowrap"), "poster event title must be allowed to wrap on narrow phones");
+assert(html.includes("@media (max-width: 430px)"), "poster must include a narrow-phone layout pass");
+assert(html.includes(".poster-preview.has-cutout-photo .poster-title-lockup"), "cutout poster needs its own title positioning");
+assert(html.includes(".poster-preview.has-cutout-photo .poster-time-block"), "cutout poster needs its own time positioning");
+assert(html.includes(".poster-preview.has-cutout-photo .poster-finish-copy"), "cutout poster needs its own copy positioning");
+assert(html.includes(".poster-preview.has-cutout-photo .poster-meta-grid"), "cutout poster needs its own metadata footer positioning");
 assert(html.includes("function downloadPosterPreview"), "save poster must export the poster artwork instead of only showing a toast");
 assert(html.includes('document.querySelector(".poster-preview")'), "poster export must target only the poster-preview boundary");
 assert(html.includes("function posterLineHtml"), "poster copy must protect against orphan characters");

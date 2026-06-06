@@ -642,7 +642,7 @@
       display: block;
       margin-bottom: 12px;
       color: #f7f1df;
-      font-size: clamp(94px, 24vw, 132px);
+      font-size: clamp(76px, 21vw, 122px);
       font-weight: 950;
       line-height: 0.72;
       letter-spacing: 0;
@@ -650,11 +650,12 @@
     .poster-event-name {
       margin: 0;
       color: #fff8e8;
-      font-size: clamp(28px, 8.4vw, 41px);
-      line-height: 0.94;
+      font-size: clamp(24px, 7.4vw, 38px);
+      line-height: 1;
       font-weight: 950;
       letter-spacing: 0;
-      white-space: nowrap;
+      max-width: 100%;
+      text-wrap: balance;
       word-break: keep-all;
     }
     .poster-title-en {
@@ -737,7 +738,7 @@
     }
     .poster-time {
       color: rgba(124,179,66,0.96);
-      font-size: clamp(58px, 17vw, 88px);
+      font-size: clamp(50px, 14.5vw, 78px);
       font-weight: 950;
       line-height: 0.9;
       letter-spacing: 0;
@@ -745,10 +746,11 @@
     .poster-time-block {
       position: absolute;
       left: 18px;
-      top: 252px;
+      top: auto;
+      bottom: 74px;
       z-index: 5;
-      width: 52%;
-      max-width: 300px;
+      width: 54%;
+      max-width: 286px;
     }
     .poster-distance-badge {
       display: inline-flex;
@@ -766,23 +768,23 @@
     .poster-finish-copy {
       position: absolute;
       left: 18px;
-      bottom: 68px;
+      bottom: 160px;
       z-index: 8;
-      width: calc(100% - 132px);
-      max-width: 348px;
+      width: calc(100% - 148px);
+      max-width: 318px;
       pointer-events: none;
     }
     .poster-subline {
       color: #fff7df;
-      font-size: 18px;
+      font-size: 16px;
       font-weight: 900;
       line-height: 1.25;
     }
     .poster-foot {
       margin: 4px 0 0;
       color: rgba(235,244,207,0.78);
-      font-size: 11px;
-      line-height: 1.36;
+      font-size: 10px;
+      line-height: 1.34;
     }
     .poster-foot span {
       display: block;
@@ -903,10 +905,11 @@
       z-index: -1;
     }
     .poster-preview.has-cutout-photo .poster-runner-photo {
-      right: -88px;
-      bottom: 48px;
-      width: 430px;
-      height: 520px;
+      right: -60px;
+      bottom: 86px;
+      z-index: 4;
+      width: 340px;
+      height: 420px;
       overflow: hidden;
       filter: drop-shadow(0 30px 24px rgba(0,0,0,0.68));
       -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
@@ -916,31 +919,83 @@
     }
     .poster-preview.has-cutout-photo .poster-runner-photo img {
       object-fit: contain;
-      object-position: 78% bottom;
+      object-position: 72% bottom;
       filter: saturate(1.04) contrast(1.08) brightness(0.94);
     }
     .poster-photo-focus-main-runner img {
-      width: 212%;
+      width: 156%;
       max-width: none;
-      transform: translateX(-41%);
+      transform: translateX(-24%);
     }
     .poster-photo-focus-main-runner {
-      clip-path: inset(0 0 0 34%);
+      clip-path: inset(0 0 0 18%);
       -webkit-mask-image:
-        linear-gradient(90deg, transparent 0%, transparent 34%, #000 43%, #000 100%),
+        linear-gradient(90deg, transparent 0%, transparent 18%, #000 30%, #000 100%),
         linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
       -webkit-mask-composite: source-in;
       mask-image:
-        linear-gradient(90deg, transparent 0%, transparent 34%, #000 43%, #000 100%),
+        linear-gradient(90deg, transparent 0%, transparent 18%, #000 30%, #000 100%),
         linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
       mask-composite: intersect;
+    }
+    .poster-preview.has-cutout-photo .poster-title-lockup {
+      top: 46px;
+      width: calc(100% - 116px);
+      max-width: 320px;
+    }
+    .poster-preview.has-cutout-photo .poster-year {
+      margin-bottom: 10px;
+      font-size: clamp(68px, 18vw, 104px);
+    }
+    .poster-preview.has-cutout-photo .poster-event-name {
+      font-size: clamp(21px, 5.9vw, 31px);
+      line-height: 1.04;
+      max-width: 92%;
+    }
+    .poster-preview.has-cutout-photo .poster-title-en {
+      margin-top: 6px;
+      font-size: 9px;
+      letter-spacing: 0.1em;
+    }
+    .poster-preview.has-cutout-photo .poster-time-block {
+      left: 18px;
+      top: auto;
+      bottom: 112px;
+      width: 43%;
+      max-width: 212px;
+    }
+    .poster-preview.has-cutout-photo .poster-distance-badge {
+      margin-bottom: 8px;
+      padding-top: 7px;
+      font-size: 9px;
+      line-height: 1.25;
+      white-space: normal;
+    }
+    .poster-preview.has-cutout-photo .poster-time {
+      font-size: clamp(42px, 12.5vw, 68px);
+      line-height: 0.88;
+    }
+    .poster-preview.has-cutout-photo .poster-finish-copy {
+      left: 18px;
+      bottom: 205px;
+      width: 43%;
+      max-width: 214px;
+    }
+    .poster-preview.has-cutout-photo .poster-subline {
+      font-size: 14px;
+      line-height: 1.18;
+    }
+    .poster-preview.has-cutout-photo .poster-foot {
+      margin-top: 5px;
+      font-size: 9.5px;
+      line-height: 1.34;
     }
     .poster-preview.has-cutout-photo .poster-medal-large,
     .poster-preview.has-cutout-photo .poster-medal-photo {
       right: 18px;
-      bottom: 62px;
-      width: 88px;
-      height: 88px;
+      bottom: 98px;
+      width: 76px;
+      height: 76px;
     }
     .poster-medal-large {
       position: absolute;
@@ -983,7 +1038,7 @@
     .poster-preview.has-runner-photo.has-cutout-photo .poster-medal-large,
     .poster-preview.has-runner-photo.has-cutout-photo .poster-medal-photo {
       right: 20px;
-      bottom: 62px;
+      bottom: 98px;
     }
     .poster-medal-photo img {
       width: 100%;
@@ -1004,6 +1059,12 @@
       gap: 8px;
       padding-top: 9px;
       border-top: 1px solid rgba(124,179,66,0.45);
+    }
+    .poster-preview.has-cutout-photo .poster-meta-grid {
+      left: 18px;
+      right: 18px;
+      bottom: 14px;
+      gap: 10px;
     }
     .poster-meta-item {
       min-width: 0;
@@ -1057,6 +1118,81 @@
       color: #ffe6c8;
       border-color: rgba(243,106,23,0.5);
       background: rgba(243,106,23,0.18);
+    }
+    @media (max-width: 430px) {
+      .poster-card {
+        padding: 8px;
+      }
+      .poster-stage {
+        padding: 8px;
+        border-radius: 12px;
+      }
+      .poster-kicker {
+        left: 14px;
+        top: 14px;
+        padding: 4px 9px;
+        font-size: 9px;
+      }
+      .poster-stamp {
+        right: 16px;
+        top: 22px;
+        width: 58px;
+        height: 58px;
+        font-size: 10px;
+      }
+      .poster-preview.has-cutout-photo .poster-title-lockup {
+        left: 14px;
+        top: 44px;
+        width: calc(100% - 94px);
+      }
+      .poster-preview.has-cutout-photo .poster-year {
+        font-size: clamp(62px, 17vw, 82px);
+      }
+      .poster-preview.has-cutout-photo .poster-event-name {
+        font-size: clamp(20px, 5.6vw, 26px);
+        max-width: 88%;
+      }
+      .poster-preview.has-cutout-photo .poster-runner-photo {
+        right: -58px;
+        bottom: 92px;
+        width: 300px;
+        height: 366px;
+      }
+      .poster-preview.has-cutout-photo .poster-time-block {
+        left: 14px;
+        bottom: 106px;
+        width: 42%;
+      }
+      .poster-preview.has-cutout-photo .poster-time {
+        font-size: clamp(38px, 11.6vw, 52px);
+      }
+      .poster-preview.has-cutout-photo .poster-finish-copy {
+        left: 14px;
+        bottom: 196px;
+        width: 42%;
+      }
+      .poster-preview.has-cutout-photo .poster-subline {
+        font-size: 12.5px;
+      }
+      .poster-preview.has-cutout-photo .poster-foot {
+        font-size: 8.8px;
+      }
+      .poster-preview.has-cutout-photo .poster-medal-large,
+      .poster-preview.has-cutout-photo .poster-medal-photo {
+        right: 15px;
+        bottom: 94px;
+        width: 66px;
+        height: 66px;
+      }
+      .poster-preview.has-cutout-photo .poster-meta-grid {
+        left: 14px;
+        right: 14px;
+        gap: 6px;
+      }
+      .poster-template {
+        min-height: 50px;
+        font-size: 9px;
+      }
     }
     .admin-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
     .admin-card b { display: block; color: var(--orange-2); font-size: 24px; }

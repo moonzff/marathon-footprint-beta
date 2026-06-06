@@ -43,6 +43,7 @@ assert(html.includes('name="birthDate"'), "runner profile must collect birthday 
 assert(html.includes('data-birth-year'), "birthday input must expose a direct year selector instead of only native month stepping");
 assert(html.includes('data-birth-month'), "birthday input must expose a direct month selector instead of only native month stepping");
 assert(html.includes('data-birth-day'), "birthday input must expose a direct day selector instead of only native month stepping");
+assert(html.includes("birth-field"), "birthday selector must span the full mobile form width so selected values are visible");
 assert(!html.includes('name="birthDate" type="date"'), "birthday must not rely on the mobile native date picker");
 assert(html.includes('name="gender"'), "runner profile must collect gender for level calculation");
 assert(html.includes('name="routeImage"'), "optional route image upload slot is missing");
@@ -91,10 +92,12 @@ assert(html.includes("function findDuplicateResultIndex"), "saving the same race
 assert(html.includes("function processRunnerPhotoCutout"), "runner photo cutout must be processed after the result is saved");
 assert(html.includes("cutoutPending"), "runner photo assets must expose pending cutout state");
 assert(html.includes("function fileFingerprint"), "runner photo cutout cache needs a stable file fingerprint");
+assert(html.includes("function shouldAutoCutoutRunnerPhoto"), "mobile webviews must be able to skip heavy automatic runner cutout");
 assert(html.includes("existingRunnerPhoto?.aiCutout"), "existing successful cutouts must not be overwritten by repeated saves");
 assert(html.includes("targetResult?.assets || {}"), "result asset reads must receive existing assets before deciding whether to recut");
-assert(html.includes("hasUsableCutout"), "pending original runner photos must not render as poster hero material");
-assert(html.includes("已先保存，个人照片正在后台抠图"), "first runner photo cutout must not block saving the race result");
+assert(html.includes("hasRunnerPhoto = Boolean(assets.runnerPhoto?.dataUrl)"), "saved runner photos must render immediately instead of waiting for cutout");
+assert(html.includes("保存后先显示原图"), "runner photo upload copy must explain the no-wait original-photo path");
+assert(html.includes("function resizedImageBlobForOcr"), "score OCR must resize large images before recognition");
 assert(!html.includes("正在智能抠图个人照片，首次会稍慢"), "save flow must not synchronously wait on the first runner photo cutout");
 assert(html.includes("佛系跑者") && html.includes("严肃竞速") && html.includes("赛道香风"), "runner styles must include share-friendly presets");
 assert(!html.includes('url("assets/memorial-ui-06-poster-maker.jpg")'), "poster output must not use sample screenshot as background");
@@ -108,7 +111,7 @@ assert(html.includes("function removeRunnerPhotoBackground"), "runner photo back
 assert(html.includes("function ensureCanvasConvertToBlob"), "background removal must polyfill canvas convertToBlob for mobile webviews");
 assert(html.includes("aiCutout"), "runner photo assets must record AI cutout state");
 assert(html.includes("has-cutout-photo"), "poster must render a distinct layout for cutout runner photos");
-assert(html.includes("先保存原图，后台智能抠图"), "runner photo upload copy must explain non-blocking AI cutout behavior");
+assert(html.includes("保存后先显示原图"), "runner photo upload copy must explain non-blocking original rendering");
 assert(html.includes("poster-distance-badge"), "poster must label full marathon versus half marathon results");
 assert(html.includes("#1A2F23") && html.includes("#7CB342"), "poster must use the design spec dark green palette");
 assert(html.includes("aspect-ratio: 4 / 5"), "poster artwork must follow the 1600x2000 4:5 design spec");
@@ -340,7 +343,7 @@ assert(xiangmaPoster.includes("poster-photo-focus-main-runner"), "poster sample 
 assert(xiangmaPoster.includes("poster-medal-badge"), "poster sample must render uploaded medal as a compact badge");
 assert(!xiangmaPoster.includes("待补充档案"), "poster must hide pending-profile road level text");
 assert(!xiangmaPoster.includes("未达标"), "poster must hide unqualified road level text");
-assert(!pendingCutoutPoster.includes("poster-runner-photo"), "pending original runner photo must not render into the poster hero layer");
+assert(pendingCutoutPoster.includes("poster-runner-photo"), "saved original runner photo must render immediately while cutout is pending");
 assert(pendingCutoutPoster.includes("个人照片正在后台抠图"), "poster must show cutout pending status outside the artwork");
 assert(xiangmaPoster.includes("2026-04-26"), "poster metadata must include the race date");
 assert(xiangmaPoster.includes("B13160"), "poster metadata must include the bib number when recorded");

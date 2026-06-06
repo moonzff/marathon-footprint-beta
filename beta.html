@@ -500,6 +500,15 @@
     .ocr-status[data-status="partial"] { color: #cfe2ff; border-color: rgba(75,149,255,0.34); background: rgba(75,149,255,0.1); }
     .ocr-status[data-status="failed"] { color: #ffd7d2; border-color: rgba(232,90,79,0.36); background: rgba(232,90,79,0.1); }
     .split { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .birth-selects {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr 0.9fr;
+      gap: 8px;
+    }
+    .birth-selects select {
+      min-width: 0;
+      padding-right: 28px;
+    }
     .feed-head {
       display: grid;
       grid-template-columns: 36px 1fr auto;
@@ -923,18 +932,18 @@
       filter: saturate(1.04) contrast(1.08) brightness(0.94);
     }
     .poster-photo-focus-main-runner img {
-      width: 156%;
+      width: 184%;
       max-width: none;
-      transform: translateX(-24%);
+      transform: translateX(-38%);
     }
     .poster-photo-focus-main-runner {
-      clip-path: inset(0 0 0 18%);
+      clip-path: inset(0 0 0 34%);
       -webkit-mask-image:
-        linear-gradient(90deg, transparent 0%, transparent 18%, #000 30%, #000 100%),
+        linear-gradient(90deg, transparent 0%, transparent 32%, #000 46%, #000 100%),
         linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
       -webkit-mask-composite: source-in;
       mask-image:
-        linear-gradient(90deg, transparent 0%, transparent 18%, #000 30%, #000 100%),
+        linear-gradient(90deg, transparent 0%, transparent 32%, #000 46%, #000 100%),
         linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
       mask-composite: intersect;
     }
@@ -1392,6 +1401,71 @@
     const pad2 = value => String(value).padStart(2, "0");
     const safe = value => String(value ?? "").replace(/[&<>"']/g, char => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[char]));
     const uid = prefix => `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+    const currentYear = new Date().getFullYear();
+    const birthYears = Array.from({ length: 91 }, (_, index) => currentYear - 8 - index);
+
+    function parseBirthDateParts(value = "") {
+      const matched = String(value || "").match(/^(\d{4})-(\d{2})-(\d{2})$/);
+      return matched ? { year: matched[1], month: matched[2], day: matched[3] } : { year: "", month: "", day: "" };
+    }
+
+    function daysInMonth(year, month) {
+      const y = Number(year || 2000);
+      const m = Number(month || 1);
+      return new Date(y, m, 0).getDate();
+    }
+
+    function optionHtml(value, label, selected) {
+      return `<option value="${safe(value)}" ${String(value) === String(selected) ? "selected" : ""}>${safe(label)}</option>`;
+    }
+
+    function renderBirthDateField(value = "") {
+      const parts = parseBirthDateParts(value);
+      const maxDay = daysInMonth(parts.year, parts.month);
+      return `
+        <div class="field" data-birth-field>
+          <label>出生日期</label>
+          <input name="birthDate" type="hidden" value="${safe(value)}" data-birth-value>
+          <div class="birth-selects">
+            <select data-birth-year aria-label="出生年份">
+              <option value="">年份</option>
+              ${birthYears.map(year => optionHtml(year, `${year}年`, parts.year)).join("")}
+            </select>
+            <select data-birth-month aria-label="出生月份">
+              <option value="">月份</option>
+              ${Array.from({ length: 12 }, (_, index) => {
+                const month = pad2(index + 1);
+                return optionHtml(month, `${index + 1}月`, parts.month);
+              }).join("")}
+            </select>
+            <select data-birth-day aria-label="出生日期">
+              <option value="">日期</option>
+              ${Array.from({ length: maxDay }, (_, index) => {
+                const day = pad2(index + 1);
+                return optionHtml(day, `${index + 1}日`, parts.day);
+              }).join("")}
+            </select>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateBirthDateField(field) {
+      if (!field) return;
+      const year = field.querySelector("[data-birth-year]")?.value || "";
+      const month = field.querySelector("[data-birth-month]")?.value || "";
+      const daySelect = field.querySelector("[data-birth-day]");
+      const hidden = field.querySelector("[data-birth-value]");
+      if (!daySelect || !hidden) return;
+      const selectedDay = daySelect.value;
+      const maxDay = daysInMonth(year, month);
+      daySelect.innerHTML = `<option value="">日期</option>` + Array.from({ length: maxDay }, (_, index) => {
+        const day = pad2(index + 1);
+        return optionHtml(day, `${index + 1}日`, selectedDay);
+      }).join("");
+      if (Number(selectedDay) > maxDay) daySelect.value = "";
+      hidden.value = year && month && daySelect.value ? `${year}-${month}-${daySelect.value}` : "";
+    }
 
     function secondsToTime(seconds) {
       const h = Math.floor(seconds / 3600);
@@ -1486,16 +1560,24 @@
       return AGE_GROUPS.findIndex(group => age >= group.min && age <= group.max);
     }
 
+    const ROAD_LEVEL_LABELS = ["大众精英", "大众一级", "大众二级"];
+
+    function displayLevel(level) {
+      return ROAD_LEVEL_LABELS.includes(level) ? level : "";
+    }
+
+    function roadLevelMessage(level) {
+      return displayLevel(level) || "保存后自动判断；没有大众等级时海报不显示。";
+    }
+
     function roadLevelFor(seconds, distance, user = getCurrentUser(), eventDate = "") {
       const gender = normalizeGender(user?.gender);
       const age = runnerAgeOnDate(user, eventDate);
       const groupIndex = ageGroupIndex(age);
       const thresholds = ROAD_LEVEL_STANDARDS[distance]?.[gender]?.[groupIndex];
-      if (!gender || age === null || groupIndex < 0) return "待补充档案";
-      if (!thresholds) return "未评级";
-      const labels = ["大众精英", "大众一级", "大众二级"];
+      if (!gender || age === null || groupIndex < 0 || !thresholds) return "";
       const matched = thresholds.findIndex(limit => seconds <= parseTime(limit));
-      return matched >= 0 ? labels[matched] : "未达标";
+      return matched >= 0 ? ROAD_LEVEL_LABELS[matched] : "";
     }
 
     function levelFor(seconds, distance) {
@@ -1503,12 +1585,12 @@
         if (seconds <= 5400) return "大众精英";
         if (seconds <= 6600) return "大众一级";
         if (seconds <= 7800) return "大众二级";
-        return "未达标";
+        return "";
       }
       if (seconds <= 12600) return "大众精英";
       if (seconds <= 14400) return "大众一级";
       if (seconds <= 16800) return "大众二级";
-      return "未达标";
+      return "";
     }
 
     function eventDistanceKm(event) {
@@ -1578,6 +1660,8 @@
             rank: `${Math.max(80, Math.round(seconds / 12 + random() * 1800))} / ${event.capacity}`,
             ageRank: `${Math.max(12, Math.round(seconds / 55 + random() * 330))} / ${Math.round(event.capacity * 0.075)}`,
             level: roadLevelFor(seconds, event.distance, user, event.date),
+            runnerGoal: user.runnerGoal,
+            runnerStyle: user.runnerStyle,
             official: random() > 0.22,
             pb: isFullPb || isHalfPb,
             medal: random() > 0.16 ? "gold" : "silver",
@@ -1662,7 +1746,7 @@
       const fullPb = bestResult(results, "全马");
       const halfPb = bestResult(results, "半马");
       const officialCount = results.filter(result => result.official).length;
-      const bestLevel = fullPb ? fullPb.level : (halfPb ? halfPb.level : "待点亮");
+      const bestLevel = displayLevel(fullPb?.level) || displayLevel(halfPb?.level) || "";
       return { results, cities, fullPb, halfPb, officialCount, bestLevel };
     }
 
@@ -1678,15 +1762,15 @@
       return runnerStyles.find(style => style.id === id) || runnerStyles[0];
     }
 
-    function currentGoal(user = getCurrentUser()) {
-      const mode = state.posterMode === "auto" ? user?.runnerGoal : state.posterMode;
+    function currentGoal(result, user = getCurrentUser()) {
+      const mode = state.posterMode === "auto" ? result.runnerGoal || user?.runnerGoal : state.posterMode;
       return goalById(mode || "pb");
     }
 
     function posterCopyFor(result, user, goal) {
       const city = result.city || "这座城";
       const name = user?.nickname || "跑者";
-      const style = styleById(user?.runnerStyle || "zen");
+      const style = styleById(result.runnerStyle || user?.runnerStyle || "zen");
       const pbText = result.pb ? "PB 成功" : "完赛成功";
       const copy = {
         pb: {
@@ -1737,6 +1821,54 @@
       return /^https?:\/\//i.test(text) ? text : "";
     }
 
+    function normalizedBibNumber(value) {
+      return String(value || "").trim().toUpperCase().replace(/\s+/g, "");
+    }
+
+    function resultDuplicateKey(result) {
+      if (!result?.userId || !result.date || !result.distance || !result.time) return "";
+      const eventKey = result.eventId || `${result.eventName || ""}|${result.city || ""}`;
+      const bibKey = normalizedBibNumber(result.bibNumber);
+      return [result.userId, eventKey, result.date, result.distance, bibKey || result.time].join("|");
+    }
+
+    function mergeResultRecords(primary, duplicate) {
+      const createdAt = [primary.createdAt, duplicate.createdAt].filter(Boolean).sort()[0] || primary.createdAt || duplicate.createdAt;
+      return {
+        ...primary,
+        ...duplicate,
+        id: primary.id,
+        assets: { ...(primary.assets || {}), ...(duplicate.assets || {}) },
+        official: Boolean(primary.official || duplicate.official),
+        pb: Boolean(primary.pb || duplicate.pb),
+        level: displayLevel(duplicate.level) || displayLevel(primary.level),
+        createdAt,
+        updatedAt: duplicate.updatedAt || primary.updatedAt
+      };
+    }
+
+    function dedupeResults(results = []) {
+      const indexByKey = new Map();
+      return results.reduce((list, result) => {
+        const key = resultDuplicateKey(result);
+        if (!key) return [...list, result];
+        const existingIndex = indexByKey.get(key);
+        if (existingIndex === undefined) {
+          indexByKey.set(key, list.length);
+          return [...list, result];
+        }
+        const next = [...list];
+        next[existingIndex] = mergeResultRecords(next[existingIndex], result);
+        return next;
+      }, []);
+    }
+
+    function findDuplicateResultIndex(candidate, excludeId = "") {
+      const key = resultDuplicateKey(candidate);
+      if (!key) return -1;
+      return (db?.results || []).findIndex(result => result.id !== excludeId && resultDuplicateKey(result) === key);
+    }
+
     function eventAssets(event) {
       return [
         ["路线图", `${event.city}城市路线`],
@@ -1758,21 +1890,24 @@
         ...user,
         gender: user.gender || "",
         birthDate: user.birthDate || "",
-        runnerGoal: user.runnerGoal || "pb",
-        runnerStyle: user.runnerStyle || "zen",
+        runnerGoal: user.runnerGoal || "",
+        runnerStyle: user.runnerStyle || "",
         publicProfile: user.publicProfile !== false
       }));
       const deletedResultIds = new Set(next.deletedResultIds);
-      next.results = (next.results || []).filter(result => !deletedResultIds.has(result.id)).map(result => {
+      next.results = dedupeResults((next.results || []).filter(result => !deletedResultIds.has(result.id)).map(result => {
         const event = next.events.find(item => item.id === result.eventId);
         return {
           ...result,
           eventName: result.eventName || event?.name || "未命名赛事",
           city: result.city || event?.city || "未知城市",
           genderRank: result.genderRank || "",
+          level: displayLevel(result.level),
+          runnerGoal: result.runnerGoal || "pb",
+          runnerStyle: result.runnerStyle || "zen",
           assets: result.assets || {}
         };
-      });
+      }));
       next.posts = next.posts || [];
       next.feedback = next.feedback || [];
       return next;
@@ -1874,12 +2009,21 @@
     }
 
     function updateLevelFromForm(form) {
-      if (!form?.time?.value) return;
+      const preview = form?.querySelector("[data-level-preview]");
+      if (!form?.time?.value) {
+        if (preview) preview.textContent = roadLevelMessage("");
+        return;
+      }
       const seconds = parseTime(form.time.value);
-      if (!seconds) return;
+      if (!seconds) {
+        if (preview) preview.textContent = roadLevelMessage("");
+        return;
+      }
       const eventInfo = selectedReportEvent(form);
       const distance = String(form.distance?.value || eventInfo.distance);
-      if (form.level) form.level.value = roadLevelFor(seconds, distance, getCurrentUser(), eventInfo.date);
+      const level = roadLevelFor(seconds, distance, getCurrentUser(), eventInfo.date);
+      if (form.level) form.level.value = level;
+      if (preview) preview.textContent = roadLevelMessage(level);
     }
 
     function applyEventToReportForm(form, eventInfo) {
@@ -2247,7 +2391,8 @@
     }
 
     async function readResultAssets(form) {
-      const result = {};
+      const assets = {};
+      const cutoutJobs = [];
       const fields = [...form.querySelectorAll("[data-asset-file]")];
       for (const input of fields) {
         const file = input.files?.[0];
@@ -2258,13 +2403,13 @@
         if (file.type?.startsWith("image/") && file.size <= maxSize) {
           try {
             if (type === "runnerPhoto") {
-              showToast("正在智能抠图个人照片，首次会稍慢");
-              asset.dataUrl = await removeRunnerPhotoBackground(file);
+              asset.dataUrl = await compressImageForAsset(file, type);
               asset.compressed = true;
-              asset.cutout = true;
-              asset.aiCutout = true;
-              asset.dataSource = "browser-ai-cutout";
-              asset.model = "@imgly/background-removal@1.7.0";
+              asset.cutout = false;
+              asset.aiCutout = false;
+              asset.cutoutPending = true;
+              asset.dataSource = "browser-original";
+              cutoutJobs.push({ file, assetName: file.name });
             } else {
               asset.dataUrl = await compressImageForAsset(file, type);
               asset.compressed = true;
@@ -2280,6 +2425,7 @@
               }
               asset.cutout = false;
               asset.aiCutout = false;
+              asset.cutoutPending = false;
               asset.note = "智能抠图失败，已先保留原图";
             } else if (file.size <= 1500 * 1024) {
               asset.dataUrl = await fileToDataUrl(file);
@@ -2289,9 +2435,69 @@
         if (!asset.dataUrl && file.size > maxSize) {
           asset.note = "图片较大，已先记录文件名";
         }
-        result[type] = asset;
+        assets[type] = asset;
       }
-      return result;
+      return { assets, cutoutJobs };
+    }
+
+    async function processRunnerPhotoCutout(resultId, job) {
+      try {
+        const cutoutDataUrl = await removeRunnerPhotoBackground(job.file);
+        const index = db.results.findIndex(result => result.id === resultId);
+        if (index < 0) return;
+        const result = db.results[index];
+        const current = result.assets?.runnerPhoto;
+        if (!current || current.name !== job.assetName) return;
+        db.results[index] = {
+          ...result,
+          assets: {
+            ...(result.assets || {}),
+            runnerPhoto: {
+              ...current,
+              dataUrl: cutoutDataUrl,
+              compressed: true,
+              cutout: true,
+              aiCutout: true,
+              cutoutPending: false,
+              dataSource: "browser-ai-cutout",
+              model: "@imgly/background-removal@1.7.0"
+            }
+          },
+          updatedAt: new Date().toISOString()
+        };
+        await persist();
+        if (state.selectedResultId === resultId || ["archive", "poster"].includes(state.view)) render();
+        showToast("个人照片抠图已完成");
+      } catch {
+        const index = db.results.findIndex(result => result.id === resultId);
+        if (index < 0) return;
+        const result = db.results[index];
+        const current = result.assets?.runnerPhoto;
+        if (!current || current.name !== job.assetName) return;
+        db.results[index] = {
+          ...result,
+          assets: {
+            ...(result.assets || {}),
+            runnerPhoto: {
+              ...current,
+              cutout: false,
+              aiCutout: false,
+              cutoutPending: false,
+              note: "智能抠图未完成，已先保留原图"
+            }
+          },
+          updatedAt: new Date().toISOString()
+        };
+        await persist();
+        if (state.selectedResultId === resultId || ["archive", "poster"].includes(state.view)) render();
+        showToast("个人照片抠图未完成，已保留原图");
+      }
+    }
+
+    function startRunnerPhotoCutout(resultId, jobs = []) {
+      if (!jobs.length) return;
+      showToast("已先保存，个人照片正在后台抠图");
+      jobs.forEach(job => window.setTimeout(() => processRunnerPhotoCutout(resultId, job), 0));
     }
 
     function tag(text, className = "") {
@@ -2400,28 +2606,12 @@
                   <option value="female">女</option>
                 </select>
               </div>
-              <div class="field">
-                <label>出生日期</label>
-                <input name="birthDate" type="date" required>
-              </div>
-            </div>
-            <div class="field">
-              <label>你更想把比赛记成什么</label>
-              <select name="runnerGoal">
-                ${runnerGoals.map(goal => `<option value="${goal.id}">${goal.label} · ${goal.short}</option>`).join("")}
-              </select>
-              <small>会影响海报重点：成绩、照片、Vlog 或完赛纪念。</small>
-            </div>
-            <div class="field">
-              <label>跑者风格</label>
-              <select name="runnerStyle">
-                ${runnerStyles.map(style => `<option value="${style.id}">${style.label}</option>`).join("")}
-              </select>
-              <small>影响海报文案语气，方便快速发朋友圈、短视频或小红书。</small>
+              ${renderBirthDateField()}
             </div>
             <div class="field">
               <label>一句话签名</label>
               <input name="motto" placeholder="每一场完赛，都值得被记住" maxlength="32">
+              <small>海报重点和跑者风格在每场完赛里单独选择，不固定到个人护照。</small>
             </div>
             <button class="solid-btn" type="submit">建立我的跑马护照</button>
           </form>
@@ -2433,7 +2623,6 @@
       const user = getCurrentUser();
       const stats = userStats();
       const recent = stats.results[0];
-      const goal = goalById(user.runnerGoal);
       return `
         <div class="stack">
           <section class="card hero-card">
@@ -2443,8 +2632,7 @@
                 <h1>${safe(user.nickname)}</h1>
                 <div class="runner-meta">
                   ${tag(`跑龄 ${user.runningYears} 年`, "gold")}
-                  ${tag(stats.bestLevel, "orange")}
-                  ${tag(goal.short, "blue")}
+                  ${stats.bestLevel ? tag(stats.bestLevel, "orange") : ""}
                   ${tag(storageText(), state.storageMode === "shared" ? "green" : "")}
                 </div>
               </div>
@@ -2453,7 +2641,7 @@
               <div><b>${stats.results.length}</b><span>完赛</span></div>
               <div><b>${stats.cities.size}</b><span>城市</span></div>
               <div><b>${stats.officialCount}</b><span>认证</span></div>
-              <div><b>${stats.bestLevel}</b><span>大众等级</span></div>
+              <div><b>${stats.bestLevel || "待点亮"}</b><span>大众等级</span></div>
             </div>
           </section>
 
@@ -2486,8 +2674,8 @@
             <span>${db.users.length} 位跑友样本</span>
           </section>
           <section class="card insight-card">
-            <b>${safe(goal.label)}型跑者</b>
-            <p>${safe(goal.line)}海报会优先把这个“帅点”放大。</p>
+            <b>每场比赛可以有不同状态</b>
+            <p>冲 PB、拍照出片、佛系完赛都放到单场完赛里选择，护照只保留长期档案。</p>
           </section>
           <div class="admin-grid">
             <section class="card admin-card"><b>${db.users.filter(user => !user.synthetic).length}</b><span>真实内测用户</span></section>
@@ -2601,7 +2789,7 @@
         });
         L.marker([city.lat, city.lng], { icon })
           .addTo(footprintMap)
-          .bindPopup(`<b>${safe(city.city)}</b><br>${safe(city.best.eventName)}<br>${safe(city.best.time)} · ${safe(city.best.level)}`);
+          .bindPopup(`<b>${safe(city.city)}</b><br>${safe(city.best.eventName)}<br>${safe([city.best.time, displayLevel(city.best.level)].filter(Boolean).join(" · "))}`);
       });
       setTimeout(() => footprintMap?.invalidateSize(), 60);
     }
@@ -2611,6 +2799,7 @@
     }
 
     function raceRow(result, single = false) {
+      const level = displayLevel(result.level);
       const details = [
         result.date,
         result.distance,
@@ -2628,7 +2817,7 @@
             <div class="runner-meta">
               ${result.pb ? tag("PB", "orange") : ""}
               ${result.official ? tag("认证", "blue") : tag("待认证")}
-              ${tag(result.level, "gold")}
+              ${level ? tag(level, "gold") : ""}
             </div>
           </div>
           <span class="row-action" aria-hidden="true">${single ? "" : "›"}</span>
@@ -2751,9 +2940,10 @@
     function renderReport() {
       const editingResult = state.editingResultId ? db.results.find(result => result.id === state.editingResultId) : null;
       const event = editingResult ? (resultEvent(editingResult) || db.events[0]) : (db.events.find(item => item.id === state.selectedEventId) || db.events[0]);
-      const levelOptions = ["待补充档案", "大众精英", "大众一级", "大众二级", "未达标"];
       const selectedDistance = editingResult?.distance || event.distance;
-      const selectedLevel = editingResult?.level || "待补充档案";
+      const selectedLevel = displayLevel(editingResult?.level || "");
+      const selectedGoal = editingResult?.runnerGoal || "pb";
+      const selectedStyle = editingResult?.runnerStyle || "zen";
       const isEditing = Boolean(editingResult);
       return `
         <form class="stack" data-form="result">
@@ -2794,6 +2984,23 @@
                 </select>
               </div>
             </div>
+            <div class="form-section">本场分享方式 <span>每场比赛都可以不同</span></div>
+            <div class="split">
+              <div class="field">
+                <label>本场海报重点</label>
+                <select name="runnerGoal">
+                  ${runnerGoals.map(goal => `<option value="${goal.id}" ${selectedGoal === goal.id ? "selected" : ""}>${goal.label} · ${goal.short}</option>`).join("")}
+                </select>
+                <small>影响这场海报优先放大成绩、照片、视频叙事或完赛纪念。</small>
+              </div>
+              <div class="field">
+                <label>本场跑者风格</label>
+                <select name="runnerStyle">
+                  ${runnerStyles.map(style => `<option value="${style.id}" ${selectedStyle === style.id ? "selected" : ""}>${style.label}</option>`).join("")}
+                </select>
+                <small>只影响这场海报文案语气，不会固定你的护照人设。</small>
+              </div>
+            </div>
             <div class="split">
               <div class="field">
                 <label>完赛成绩</label>
@@ -2801,10 +3008,9 @@
               </div>
               <div class="field">
                 <label>大众等级</label>
-                <select name="level">
-                  ${levelOptions.map(level => `<option ${level === selectedLevel ? "selected" : ""}>${safe(level)}</option>`).join("")}
-                </select>
-                <small>按跑者性别、出生日期、比赛日期和项目自动计算。</small>
+                <input name="level" type="hidden" value="${safe(selectedLevel)}">
+                <div class="ocr-status" data-level-preview data-status="partial">${safe(roadLevelMessage(selectedLevel))}</div>
+                <small>按跑者性别、出生日期、比赛日期、项目和成绩自动计算。</small>
               </div>
             </div>
             <div class="field">
@@ -2843,7 +3049,7 @@
               <div class="asset-upload">
                 <label>个人照片</label>
                 <input name="runnerPhoto" type="file" accept="image/*" data-asset-file data-asset-type="runnerPhoto">
-                <small>上传后会先智能抠图；正面跑姿效果最好</small>
+                <small>先保存原图，后台智能抠图；正面跑姿效果最好</small>
               </div>
               <div class="asset-upload">
                 <label>赛事路线图</label>
@@ -2894,19 +3100,7 @@
                 <option value="female" ${normalizeGender(user.gender) === "female" ? "selected" : ""}>女</option>
               </select>
             </div>
-            <div class="field"><label>出生日期</label><input name="birthDate" type="date" value="${safe(user.birthDate || "")}"></div>
-          </div>
-          <div class="field">
-            <label>海报重点</label>
-            <select name="runnerGoal">
-              ${runnerGoals.map(goal => `<option value="${goal.id}" ${(user.runnerGoal || "pb") === goal.id ? "selected" : ""}>${goal.label} · ${goal.short}</option>`).join("")}
-            </select>
-          </div>
-          <div class="field">
-            <label>跑者风格</label>
-            <select name="runnerStyle">
-              ${runnerStyles.map(style => `<option value="${style.id}" ${(user.runnerStyle || "zen") === style.id ? "selected" : ""}>${style.label}</option>`).join("")}
-            </select>
+            ${renderBirthDateField(user.birthDate || "")}
           </div>
           <div class="field"><label>签名</label><input name="motto" value="${safe(user.motto || "")}" maxlength="32"></div>
           <div class="field"><label>公开主页</label><select name="publicProfile"><option value="true" ${user.publicProfile ? "selected" : ""}>公开</option><option value="false" ${!user.publicProfile ? "selected" : ""}>仅自己可见</option></select></div>
@@ -2921,14 +3115,16 @@
       if (!result) return `<div class="empty">先添加一场完赛，再生成海报。</div><button class="solid-btn" type="button" data-view="report">去添加完赛</button>`;
       const user = getCurrentUser();
       const event = resultEvent(result) || {};
-      const goal = currentGoal(user);
+      const goal = currentGoal(result, user);
       const copy = posterCopyFor(result, user, goal);
+      const style = styleById(result.runnerStyle || user?.runnerStyle || "zen");
       const year = result.date.slice(0, 4);
       const eventTitle = posterEventTitle(result, event);
       const distanceLabel = result.distance === "半马" ? "半马成绩" : "全马成绩";
       const eventTitleEn = result.distance === "半马" ? "XIANGJIANG HALF MARATHON" : "MARATHON FINISHER";
       const eventDistanceText = result.distance === "半马" ? "半程马拉松" : result.distance;
       const badgeText = [distanceLabel, result.pace, result.elevationGain ? `爬升 ${result.elevationGain}m` : ""].filter(Boolean).join(" · ");
+      const posterSubline = [copy.title, displayLevel(result.level)].filter(Boolean).join(" · ");
       const assets = result.assets || {};
       const hasRunnerPhoto = Boolean(assets.runnerPhoto?.dataUrl);
       const hasCutoutPhoto = Boolean(assets.runnerPhoto?.cutout || assets.runnerPhoto?.aiCutout);
@@ -2966,7 +3162,7 @@
                     <div class="poster-time">${safe(result.time)}</div>
                   </div>
                   <div class="poster-finish-copy">
-                    <div class="poster-subline">${safe(copy.title)} · ${safe(result.level)}</div>
+                    <div class="poster-subline">${safe(posterSubline)}</div>
                     <p class="poster-foot">${posterFootHtml(copy)}</p>
                   </div>
                 </div>
@@ -3005,7 +3201,7 @@
           </div>
           <section class="card insight-card">
             <b>当前模板：${safe(goal.label)}</b>
-            <p>${safe(goal.line)}风格会套用“${safe(styleById(user?.runnerStyle).label)}”的文案语气，让海报更适合快速发圈或剪短视频。</p>
+            <p>${safe(goal.line)}风格会套用“${safe(style.label)}”的文案语气，只影响当前这场完赛海报。</p>
           </section>
         </div>
       `;
@@ -3208,8 +3404,6 @@
           gender: String(values.gender || "").trim(),
           birthDate: String(values.birthDate || "").trim(),
           runningYears: Number(values.runningYears || 1),
-          runnerGoal: String(values.runnerGoal || "pb"),
-          runnerStyle: String(values.runnerStyle || "zen"),
           motto: String(values.motto || "每一场完赛，都值得被记住").trim(),
           publicProfile: true,
           synthetic: false,
@@ -3233,8 +3427,6 @@
         user.gender = String(values.gender || "").trim();
         user.birthDate = String(values.birthDate || "").trim();
         user.runningYears = Number(values.runningYears || user.runningYears);
-        user.runnerGoal = String(values.runnerGoal || user.runnerGoal || "pb");
-        user.runnerStyle = String(values.runnerStyle || user.runnerStyle || "zen");
         user.motto = String(values.motto || "").trim();
         user.publicProfile = values.publicProfile === "true";
         persist();
@@ -3244,73 +3436,100 @@
       }
 
       if (form.dataset.form === "result") {
-        if (values.ocrStatus === "reading") {
-          showToast("成绩单仍在识别，请稍后再保存");
+        if (form.dataset.saving === "true") {
+          showToast("正在保存，请稍候");
           return;
         }
-        const hasScoreFile = Boolean(form.querySelector("[data-score-file]")?.files?.length);
-        if (hasScoreFile && values.ocrStatus !== "verified" && values.manualConfirmed !== "true") {
-          showToast("OCR 未确认赛事，请手动选择赛事后再保存");
+        form.dataset.saving = "true";
+        try {
+          if (values.ocrStatus === "reading") {
+            showToast("成绩单仍在识别，请稍后再保存");
+            return;
+          }
+          const hasScoreFile = Boolean(form.querySelector("[data-score-file]")?.files?.length);
+          if (hasScoreFile && values.ocrStatus !== "verified" && values.manualConfirmed !== "true") {
+            showToast("OCR 未确认赛事，请手动选择赛事后再保存");
+            return;
+          }
+          const typedEvent = findEventFromText(values.eventQuery);
+          const eventInfo = typedEvent || db.events.find(item => item.id === values.eventId) || db.events[0];
+          const seconds = parseTime(values.time);
+          if (!seconds) {
+            showToast("成绩格式请写成 3:28:15");
+            return;
+          }
+          const distance = String(values.distance || eventInfo.distance);
+          const km = distance === "半马" ? 21.0975 : 42.195;
+          const editingIndex = values.resultId ? db.results.findIndex(item => item.id === values.resultId) : -1;
+          const existingResult = editingIndex >= 0 ? db.results[editingIndex] : null;
+          const candidate = {
+            userId: state.currentUserId,
+            eventId: eventInfo.id,
+            eventName: eventInfo.name,
+            city: eventInfo.city,
+            date: eventInfo.date,
+            distance,
+            time: secondsToTime(seconds),
+            bibNumber: String(values.bibNumber || "").trim()
+          };
+          const duplicateIndex = existingResult ? -1 : findDuplicateResultIndex(candidate);
+          const duplicateResult = duplicateIndex >= 0 ? db.results[duplicateIndex] : null;
+          const targetIndex = existingResult ? editingIndex : duplicateIndex;
+          const targetResult = existingResult || duplicateResult;
+          const previousBest = bestResult(userResults().filter(item => item.id !== targetResult?.id), distance);
+          const calculatedLevel = roadLevelFor(seconds, distance, getCurrentUser(), eventInfo.date);
+          const assetRead = await readResultAssets(form);
+          const resultAssets = assetRead.assets || {};
+          const mergedAssets = Object.keys(resultAssets).length ? { ...(targetResult?.assets || {}), ...resultAssets } : (targetResult?.assets || {});
+          const result = {
+            id: targetResult?.id || uid("real_result"),
+            userId: state.currentUserId,
+            eventId: eventInfo.id,
+            eventName: eventInfo.name,
+            city: eventInfo.city,
+            date: eventInfo.date,
+            distance,
+            seconds,
+            time: secondsToTime(seconds),
+            pace: pace(seconds, km),
+            rank: String(values.rank || `- / ${eventInfo.capacity}`),
+            genderRank: String(values.genderRank || "-"),
+            ageRank: String(values.ageRank || "-"),
+            runnerGoal: String(values.runnerGoal || targetResult?.runnerGoal || "pb"),
+            runnerStyle: String(values.runnerStyle || targetResult?.runnerStyle || "zen"),
+            bibNumber: String(values.bibNumber || "").trim(),
+            elevationGain: String(values.elevationGain || "").trim().replace(/[^\d.]/g, ""),
+            photoAlbumUrl: String(values.photoAlbumUrl || "").trim(),
+            level: calculatedLevel,
+            official: values.official === "true",
+            pb: !previousBest || seconds < previousBest.seconds,
+            medal: targetResult?.medal || "gold",
+            source: values.ocrStatus === "verified" ? "ocr" : "manual",
+            assets: mergedAssets,
+            note: String(values.note || "").trim(),
+            synthetic: false,
+            createdAt: targetResult?.createdAt || new Date().toISOString(),
+            updatedAt: targetResult ? new Date().toISOString() : undefined
+          };
+          if (targetResult) {
+            db.results.splice(targetIndex, 1, result);
+          } else {
+            db.results.unshift(result);
+          }
+          state.selectedEventId = result.eventId;
+          state.selectedResultId = result.id;
+          state.editingResultId = null;
+          state.reportOcrStatus = "idle";
+          state.reportOcrMessage = "先上传成绩单截图；系统会读取赛事、成绩和排名，下面字段只做校对补充。";
+          state.reportManualConfirmed = false;
+          await persist();
+          showToast(existingResult ? "赛事档案已更新" : duplicateResult ? "已更新同场完赛档案" : "已保存到纪念册");
+          navigate("archive");
+          startRunnerPhotoCutout(result.id, assetRead.cutoutJobs);
           return;
+        } finally {
+          form.dataset.saving = "";
         }
-        const typedEvent = findEventFromText(values.eventQuery);
-        const eventInfo = typedEvent || db.events.find(item => item.id === values.eventId) || db.events[0];
-        const seconds = parseTime(values.time);
-        if (!seconds) {
-          showToast("成绩格式请写成 3:28:15");
-          return;
-        }
-        const distance = String(values.distance || eventInfo.distance);
-        const km = distance === "半马" ? 21.0975 : 42.195;
-        const editingIndex = values.resultId ? db.results.findIndex(item => item.id === values.resultId) : -1;
-        const existingResult = editingIndex >= 0 ? db.results[editingIndex] : null;
-        const previousBest = bestResult(userResults().filter(item => item.id !== existingResult?.id), distance);
-        const calculatedLevel = roadLevelFor(seconds, distance, getCurrentUser(), eventInfo.date);
-        const resultAssets = await readResultAssets(form);
-        const mergedAssets = Object.keys(resultAssets).length ? { ...(existingResult?.assets || {}), ...resultAssets } : (existingResult?.assets || {});
-        const result = {
-          id: existingResult?.id || uid("real_result"),
-          userId: state.currentUserId,
-          eventId: eventInfo.id,
-          eventName: eventInfo.name,
-          city: eventInfo.city,
-          date: eventInfo.date,
-          distance,
-          seconds,
-          time: secondsToTime(seconds),
-          pace: pace(seconds, km),
-          rank: String(values.rank || `- / ${eventInfo.capacity}`),
-          genderRank: String(values.genderRank || "-"),
-          ageRank: String(values.ageRank || "-"),
-          bibNumber: String(values.bibNumber || "").trim(),
-          elevationGain: String(values.elevationGain || "").trim().replace(/[^\d.]/g, ""),
-          photoAlbumUrl: String(values.photoAlbumUrl || "").trim(),
-          level: calculatedLevel === "待补充档案" ? String(values.level || calculatedLevel) : calculatedLevel,
-          official: values.official === "true",
-          pb: !previousBest || seconds < previousBest.seconds,
-          medal: existingResult?.medal || "gold",
-          source: values.ocrStatus === "verified" ? "ocr" : "manual",
-          assets: mergedAssets,
-          note: String(values.note || "").trim(),
-          synthetic: false,
-          createdAt: existingResult?.createdAt || new Date().toISOString(),
-          updatedAt: existingResult ? new Date().toISOString() : undefined
-        };
-        if (existingResult) {
-          db.results.splice(editingIndex, 1, result);
-        } else {
-          db.results.unshift(result);
-        }
-        state.selectedEventId = result.eventId;
-        state.selectedResultId = result.id;
-        state.editingResultId = null;
-        state.reportOcrStatus = "idle";
-        state.reportOcrMessage = "先上传成绩单截图；系统会读取赛事、成绩和排名，下面字段只做校对补充。";
-        state.reportManualConfirmed = false;
-        persist();
-        showToast(existingResult ? "赛事档案已更新" : "已保存到纪念册");
-        navigate("archive");
-        return;
       }
 
       if (form.dataset.form === "post") {
@@ -3352,6 +3571,11 @@
     });
 
     document.addEventListener("change", event => {
+      const birthSelect = event.target.closest("[data-birth-year], [data-birth-month], [data-birth-day]");
+      if (birthSelect) {
+        updateBirthDateField(birthSelect.closest("[data-birth-field]"));
+        return;
+      }
       const eventSelect = event.target.closest("[data-select-event]");
       if (eventSelect) {
         state.selectedEventId = eventSelect.value;

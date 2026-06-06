@@ -2230,6 +2230,10 @@
       });
     }
 
+    function fileFingerprint(file) {
+      return [file.name, file.size, file.lastModified].filter(value => value !== undefined).join("|");
+    }
+
     function imageFromDataUrl(dataUrl) {
       return new Promise((resolve, reject) => {
         const image = new Image();
@@ -2390,7 +2394,7 @@
       return resizeDataUrl(cutoutDataUrl, 1100, "image/png", 0.92);
     }
 
-    async function readResultAssets(form) {
+    async function readResultAssets(form, existingAssets = {}) {
       const assets = {};
       const cutoutJobs = [];
       const fields = [...form.querySelectorAll("[data-asset-file]")];
@@ -2398,18 +2402,40 @@
         const file = input.files?.[0];
         if (!file) continue;
         const type = input.dataset.assetType;
-        const asset = { name: file.name, type: file.type || "image/*" };
+        const fingerprint = fileFingerprint(file);
+        let asset = { name: file.name, type: file.type || "image/*", fingerprint };
         const maxSize = type === "runnerPhoto" ? 12 * 1024 * 1024 : 8 * 1024 * 1024;
         if (file.type?.startsWith("image/") && file.size <= maxSize) {
           try {
             if (type === "runnerPhoto") {
+              const existingRunnerPhoto = existingAssets.runnerPhoto;
+              if (existingRunnerPhoto?.aiCutout && (existingRunnerPhoto.fingerprint === fingerprint || (!existingRunnerPhoto.fingerprint && existingRunnerPhoto.name === file.name))) {
+                assets[type] = { ...existingRunnerPhoto, cutoutPending: false };
+                continue;
+              }
+              if (existingRunnerPhoto?.aiCutout) {
+                assets[type] = {
+                  ...existingRunnerPhoto,
+                  cutoutPending: true,
+                  pendingName: file.name,
+                  pendingFingerprint: fingerprint
+                };
+                cutoutJobs.push({
+                  file,
+                  fingerprint,
+                  nextName: file.name,
+                  previousName: existingRunnerPhoto.name,
+                  hadExistingCutout: true
+                });
+                continue;
+              }
               asset.dataUrl = await compressImageForAsset(file, type);
               asset.compressed = true;
               asset.cutout = false;
               asset.aiCutout = false;
               asset.cutoutPending = true;
               asset.dataSource = "browser-original";
-              cutoutJobs.push({ file, assetName: file.name });
+              cutoutJobs.push({ file, fingerprint, nextName: file.name, hadExistingCutout: false });
             } else {
               asset.dataUrl = await compressImageForAsset(file, type);
               asset.compressed = true;
@@ -2447,18 +2473,26 @@
         if (index < 0) return;
         const result = db.results[index];
         const current = result.assets?.runnerPhoto;
-        if (!current || current.name !== job.assetName) return;
+        if (!current) return;
+        if (job.previousName && current.name !== job.previousName) return;
+        if (!job.previousName && current.name !== job.nextName) return;
+        if ((current.pendingFingerprint || current.fingerprint) && (current.pendingFingerprint || current.fingerprint) !== job.fingerprint) return;
         db.results[index] = {
           ...result,
           assets: {
             ...(result.assets || {}),
             runnerPhoto: {
               ...current,
+              name: job.nextName,
+              type: job.file.type || current.type || "image/*",
+              fingerprint: job.fingerprint,
               dataUrl: cutoutDataUrl,
               compressed: true,
               cutout: true,
               aiCutout: true,
               cutoutPending: false,
+              pendingName: "",
+              pendingFingerprint: "",
               dataSource: "browser-ai-cutout",
               model: "@imgly/background-removal@1.7.0"
             }
@@ -2473,16 +2507,20 @@
         if (index < 0) return;
         const result = db.results[index];
         const current = result.assets?.runnerPhoto;
-        if (!current || current.name !== job.assetName) return;
+        if (!current) return;
+        if (job.previousName && current.name !== job.previousName) return;
+        if (!job.previousName && current.name !== job.nextName) return;
         db.results[index] = {
           ...result,
           assets: {
             ...(result.assets || {}),
             runnerPhoto: {
               ...current,
-              cutout: false,
-              aiCutout: false,
+              cutout: job.hadExistingCutout ? current.cutout : false,
+              aiCutout: job.hadExistingCutout ? current.aiCutout : false,
               cutoutPending: false,
+              pendingName: "",
+              pendingFingerprint: "",
               note: "智能抠图未完成，已先保留原图"
             }
           },
@@ -3126,8 +3164,10 @@
       const badgeText = [distanceLabel, result.pace, result.elevationGain ? `爬升 ${result.elevationGain}m` : ""].filter(Boolean).join(" · ");
       const posterSubline = [copy.title, displayLevel(result.level)].filter(Boolean).join(" · ");
       const assets = result.assets || {};
-      const hasRunnerPhoto = Boolean(assets.runnerPhoto?.dataUrl);
-      const hasCutoutPhoto = Boolean(assets.runnerPhoto?.cutout || assets.runnerPhoto?.aiCutout);
+      const cutoutPending = Boolean(assets.runnerPhoto?.cutoutPending);
+      const hasUsableCutout = Boolean(assets.runnerPhoto?.dataUrl && (assets.runnerPhoto?.cutout || assets.runnerPhoto?.aiCutout));
+      const hasRunnerPhoto = Boolean(assets.runnerPhoto?.dataUrl) && (!cutoutPending || hasUsableCutout);
+      const hasCutoutPhoto = hasRunnerPhoto && Boolean(assets.runnerPhoto?.cutout || assets.runnerPhoto?.aiCutout);
       const photoAlbumUrl = safeExternalUrl(result.photoAlbumUrl);
       return `
         <div class="stack">
@@ -3199,6 +3239,7 @@
             <button class="ghost-btn" type="button" data-action="edit-result" data-result-id="${safe(result.id)}">编辑记录</button>
             <button class="danger-btn" type="button" data-action="delete-result" data-result-id="${safe(result.id)}">删除记录</button>
           </div>
+          ${cutoutPending ? `<div class="ocr-status" data-status="partial">个人照片正在后台抠图，完成后自动更新海报。</div>` : ""}
           <section class="card insight-card">
             <b>当前模板：${safe(goal.label)}</b>
             <p>${safe(goal.line)}风格会套用“${safe(style.label)}”的文案语气，只影响当前这场完赛海报。</p>
@@ -3478,7 +3519,7 @@
           const targetResult = existingResult || duplicateResult;
           const previousBest = bestResult(userResults().filter(item => item.id !== targetResult?.id), distance);
           const calculatedLevel = roadLevelFor(seconds, distance, getCurrentUser(), eventInfo.date);
-          const assetRead = await readResultAssets(form);
+          const assetRead = await readResultAssets(form, targetResult?.assets || {});
           const resultAssets = assetRead.assets || {};
           const mergedAssets = Object.keys(resultAssets).length ? { ...(targetResult?.assets || {}), ...resultAssets } : (targetResult?.assets || {});
           const result = {

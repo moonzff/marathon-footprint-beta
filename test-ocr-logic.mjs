@@ -90,6 +90,10 @@ assert(html.includes("function displayLevel"), "non-display road levels must be 
 assert(html.includes("function findDuplicateResultIndex"), "saving the same race twice must update the existing result");
 assert(html.includes("function processRunnerPhotoCutout"), "runner photo cutout must be processed after the result is saved");
 assert(html.includes("cutoutPending"), "runner photo assets must expose pending cutout state");
+assert(html.includes("function fileFingerprint"), "runner photo cutout cache needs a stable file fingerprint");
+assert(html.includes("existingRunnerPhoto?.aiCutout"), "existing successful cutouts must not be overwritten by repeated saves");
+assert(html.includes("targetResult?.assets || {}"), "result asset reads must receive existing assets before deciding whether to recut");
+assert(html.includes("hasUsableCutout"), "pending original runner photos must not render as poster hero material");
 assert(html.includes("已先保存，个人照片正在后台抠图"), "first runner photo cutout must not block saving the race result");
 assert(!html.includes("正在智能抠图个人照片，首次会稍慢"), "save flow must not synchronously wait on the first runner photo cutout");
 assert(html.includes("佛系跑者") && html.includes("严肃竞速") && html.includes("赛道香风"), "runner styles must include share-friendly presets");
@@ -196,7 +200,7 @@ function runParser(sampleText, fileName) {
   return Function("sandbox", "sampleText", "fileName", `with (sandbox) { ${browserScript}; db = normalizeBetaState(generateSeed()); return parseOcrResult(sampleText, fileName); }`)(sandbox, sampleText, fileName);
 }
 
-function renderXiangmaPosterSample() {
+function renderXiangmaPosterSample(runnerPhoto = { name: "runner.jpg", dataUrl: "data:image/png;base64,RUNNER", cutout: true, aiCutout: true }) {
   const stubElement = {
     addEventListener() {},
     classList: { toggle() {}, add() {}, remove() {} },
@@ -240,7 +244,7 @@ function renderXiangmaPosterSample() {
     Error,
     encodeURIComponent
   };
-  return Function("sandbox", `with (sandbox) {
+  return Function("sandbox", "runnerPhoto", `with (sandbox) {
     ${browserScript};
     db = normalizeBetaState({
       version: 2,
@@ -273,7 +277,7 @@ function renderXiangmaPosterSample() {
         pb: false,
         medal: "gold",
         assets: {
-          runnerPhoto: { name: "runner.jpg", dataUrl: "data:image/png;base64,RUNNER", cutout: true, aiCutout: true },
+          runnerPhoto,
           routeImage: { name: "route.jpg", dataUrl: "data:image/jpeg;base64,ROUTE" },
           medalImage: { name: "medal.jpg", dataUrl: "data:image/jpeg;base64,MEDAL" }
         }
@@ -285,7 +289,7 @@ function renderXiangmaPosterSample() {
     state.currentUserId = "user_xiangma";
     state.selectedResultId = "result_xiangma";
     return renderPoster();
-  }`)(sandbox);
+  }`)(sandbox, runnerPhoto);
 }
 
 const xiangmaCertificateText = `
@@ -311,6 +315,13 @@ assert(xiangmaParsed.bibNumber === "B13160", "certificate parser must capture bi
 assert(xiangmaParsed.elevationGain === "330", "route text parser must capture elevation gain when present");
 
 const xiangmaPoster = renderXiangmaPosterSample();
+const pendingCutoutPoster = renderXiangmaPosterSample({
+  name: "runner.jpg",
+  dataUrl: "data:image/jpeg;base64,ORIGINAL",
+  cutout: false,
+  aiCutout: false,
+  cutoutPending: true
+});
 assert(xiangmaPoster.includes("湘江半程马拉松"), "Xiangjiang poster must show the actual race name");
 assert(!xiangmaPoster.includes("长沙马拉松"), "Xiangjiang poster must not be renamed to Changsha Marathon");
 assert(xiangmaPoster.includes("半马成绩"), "Xiangjiang half poster must explicitly label the result as half marathon");
@@ -329,6 +340,8 @@ assert(xiangmaPoster.includes("poster-photo-focus-main-runner"), "poster sample 
 assert(xiangmaPoster.includes("poster-medal-badge"), "poster sample must render uploaded medal as a compact badge");
 assert(!xiangmaPoster.includes("待补充档案"), "poster must hide pending-profile road level text");
 assert(!xiangmaPoster.includes("未达标"), "poster must hide unqualified road level text");
+assert(!pendingCutoutPoster.includes("poster-runner-photo"), "pending original runner photo must not render into the poster hero layer");
+assert(pendingCutoutPoster.includes("个人照片正在后台抠图"), "poster must show cutout pending status outside the artwork");
 assert(xiangmaPoster.includes("2026-04-26"), "poster metadata must include the race date");
 assert(xiangmaPoster.includes("B13160"), "poster metadata must include the bib number when recorded");
 assert(xiangmaPoster.includes("poster-controls"), "poster template controls must render outside the poster artwork");

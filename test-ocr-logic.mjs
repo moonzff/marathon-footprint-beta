@@ -92,7 +92,11 @@ assert(html.includes("function findDuplicateResultIndex"), "saving the same race
 assert(html.includes("function processRunnerPhotoCutout"), "runner photo cutout must be processed after the result is saved");
 assert(html.includes("cutoutPending"), "runner photo assets must expose pending cutout state");
 assert(html.includes("function fileFingerprint"), "runner photo cutout cache needs a stable file fingerprint");
-assert(html.includes("function shouldAutoCutoutRunnerPhoto"), "mobile webviews must be able to skip heavy automatic runner cutout");
+assert(html.includes("function shouldAutoCutoutRunnerPhoto"), "runner photo cutout policy helper is missing");
+assert(html.includes("function shouldAutoCutoutRunnerPhoto() {\n      return true;\n    }"), "mobile webviews must still queue runner photo cutout in the background");
+assert(!html.includes("return !looksMobile"), "mobile webviews must not silently skip runner photo cutout");
+assert(html.includes("function maybeQueueStoredRunnerPhotoCutout"), "stored original runner photos must be eligible for catch-up cutout");
+assert(html.includes('runnerPhoto.dataSource === "browser-original"'), "catch-up cutout must only process stored browser originals");
 assert(html.includes("existingRunnerPhoto?.aiCutout"), "existing successful cutouts must not be overwritten by repeated saves");
 assert(html.includes("targetResult?.assets || {}"), "result asset reads must receive existing assets before deciding whether to recut");
 assert(html.includes("function shouldUseRunnerHeroPoster"), "poster must gate runner-photo hero layouts behind an explicit helper");
@@ -106,7 +110,7 @@ assert(html.includes("function posterEventTitle"), "poster title must use the re
 assert(!html.includes("${safe(result.city)}马拉松"), "poster must not rewrite special races like 湘江半程马拉松 into city + 马拉松");
 assert(html.includes("poster-route-art"), "uploaded route maps should be treated as poster art rather than pasted raw screenshots");
 assert(html.includes("poster-runner-photo"), "uploaded personal photos should become poster hero material");
-assert(html.includes("@imgly/background-removal"), "runner photos must use browser AI background removal");
+assert(html.includes("@imgly/background-removal@1.7.0"), "runner photos must use a pinned browser AI background removal version");
 assert(html.includes("function ensureBackgroundRemoval"), "background removal module loader is missing");
 assert(html.includes("function removeRunnerPhotoBackground"), "runner photo background removal helper is missing");
 assert(html.includes("function runnerCutoutBounds"), "runner cutouts need transparent-boundary detection before poster fitting");
@@ -356,6 +360,14 @@ const pendingCutoutPoster = renderXiangmaPosterSample({
   aiCutout: false,
   cutoutPending: true
 }, "photo");
+const storedOriginalPoster = renderXiangmaPosterSample({
+  name: "runner.jpg",
+  dataUrl: "data:image/jpeg;base64,ORIGINAL",
+  cutout: false,
+  aiCutout: false,
+  cutoutPending: false,
+  dataSource: "browser-original"
+}, "photo");
 assert(xiangmaPoster.includes("湘江半程马拉松"), "Xiangjiang poster must show the actual race name");
 assert(!xiangmaPoster.includes("长沙马拉松"), "Xiangjiang poster must not be renamed to Changsha Marathon");
 assert(xiangmaPoster.includes("半马成绩"), "Xiangjiang half poster must explicitly label the result as half marathon");
@@ -383,6 +395,8 @@ assert(!xiangmaPoster.includes("待补充档案"), "poster must hide pending-pro
 assert(!xiangmaPoster.includes("未达标"), "poster must hide unqualified road level text");
 assert(!pendingCutoutPoster.includes("poster-runner-photo"), "raw runner photos must wait for cutout before entering the poster artwork");
 assert(pendingCutoutPoster.includes("个人照片正在后台抠图"), "poster must show cutout pending status outside the artwork");
+assert(!storedOriginalPoster.includes("poster-runner-photo"), "stored original runner photos must not enter poster artwork before catch-up cutout");
+assert(storedOriginalPoster.includes("个人照片正在后台抠图"), "stored original runner photos must be queued for catch-up cutout on the poster page");
 assert(xiangmaPoster.includes("2026-04-26"), "poster metadata must include the race date");
 assert(xiangmaPoster.includes("B13160"), "poster metadata must include the bib number when recorded");
 assert(xiangmaPoster.includes("poster-controls"), "poster template controls must render outside the poster artwork");

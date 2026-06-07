@@ -1476,8 +1476,9 @@
     let routeLine = null;
     let tesseractPromise = null;
     let backgroundRemovalPromise = null;
+    const activeStoredRunnerCutouts = new Set();
 
-    const BG_REMOVAL_MODULE_URL = "https://cdn.jsdelivr.net/npm/@imgly/background-removal/+esm";
+    const BG_REMOVAL_MODULE_URL = "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/+esm";
     const BG_REMOVAL_PUBLIC_PATH = "https://staticimgly.com/@imgly/background-removal-data/1.7.0/dist/";
 
     const screen = document.querySelector("#screen");
@@ -2425,9 +2426,56 @@
     }
 
     function shouldAutoCutoutRunnerPhoto() {
-      const agent = navigator.userAgent || "";
-      const looksMobile = /MicroMessenger|WeChat|Android|iPhone|iPad|Mobile/i.test(agent) || window.matchMedia("(max-width: 760px), (pointer: coarse)").matches;
-      return !looksMobile;
+      return true;
+    }
+
+    function dataUrlToBlob(dataUrl) {
+      const source = String(dataUrl || "");
+      const commaIndex = source.indexOf(",");
+      const meta = commaIndex >= 0 ? source.slice(0, commaIndex) : "";
+      const payload = commaIndex >= 0 ? source.slice(commaIndex + 1) : source;
+      const mime = /data:([^;,]+)/.exec(meta)?.[1] || "image/jpeg";
+      const binary = meta.includes(";base64") ? atob(payload) : decodeURIComponent(payload);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
+      return new Blob([bytes], { type: mime });
+    }
+
+    function shouldQueueStoredRunnerPhotoCutout(runnerPhoto) {
+      return Boolean(
+        runnerPhoto?.dataUrl &&
+        runnerPhoto.dataSource === "browser-original" &&
+        !runnerPhoto.cutout &&
+        !runnerPhoto.aiCutout &&
+        !runnerPhoto.cutoutPending &&
+        !runnerPhoto.cutoutFailedAt
+      );
+    }
+
+    function maybeQueueStoredRunnerPhotoCutout(result) {
+      const runnerPhoto = result?.assets?.runnerPhoto;
+      if (!shouldAutoCutoutRunnerPhoto() || !shouldQueueStoredRunnerPhotoCutout(runnerPhoto)) return;
+      if (activeStoredRunnerCutouts.has(result.id)) return;
+      const fingerprint = runnerPhoto.fingerprint || [runnerPhoto.name, runnerPhoto.dataUrl.length].filter(Boolean).join("|");
+      const nextName = runnerPhoto.name || "个人照片";
+      runnerPhoto.name = nextName;
+      runnerPhoto.cutoutPending = true;
+      runnerPhoto.pendingFingerprint = fingerprint;
+      activeStoredRunnerCutouts.add(result.id);
+      persist().catch(() => {});
+      window.setTimeout(async () => {
+        try {
+          const file = dataUrlToBlob(runnerPhoto.dataUrl);
+          await processRunnerPhotoCutout(result.id, {
+            file,
+            fingerprint,
+            nextName,
+            hadExistingCutout: false
+          });
+        } finally {
+          activeStoredRunnerCutouts.delete(result.id);
+        }
+      }, 300);
     }
 
     function imageFromDataUrl(dataUrl) {
@@ -2828,6 +2876,7 @@
               cutout: job.hadExistingCutout ? current.cutout : false,
               aiCutout: job.hadExistingCutout ? current.aiCutout : false,
               cutoutPending: false,
+              cutoutFailedAt: new Date().toISOString(),
               pendingName: "",
               pendingFingerprint: "",
               note: "智能抠图未完成，已先保留原图"
@@ -3491,6 +3540,7 @@
       const eventDistanceText = result.distance === "半马" ? "半程马拉松" : result.distance;
       const badgeText = [distanceLabel, result.pace, result.elevationGain ? `爬升 ${result.elevationGain}m` : ""].filter(Boolean).join(" · ");
       const posterSubline = [copy.title, displayLevel(result.level)].filter(Boolean).join(" · ");
+      maybeQueueStoredRunnerPhotoCutout(result);
       const assets = result.assets || {};
       const cutoutPending = Boolean(assets.runnerPhoto?.cutoutPending);
       const renderRunnerPhoto = shouldUseRunnerHeroPoster(assets, goal);

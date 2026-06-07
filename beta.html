@@ -674,7 +674,7 @@
       display: block;
       margin-bottom: 12px;
       color: #f7f1df;
-      font-size: clamp(76px, 21vw, 122px);
+      font-size: clamp(54px, 15vw, 86px);
       font-weight: 950;
       line-height: 0.72;
       letter-spacing: 0;
@@ -682,7 +682,7 @@
     .poster-event-name {
       margin: 0;
       color: #fff8e8;
-      font-size: clamp(24px, 7.4vw, 38px);
+      font-size: clamp(22px, 6.5vw, 34px);
       line-height: 1;
       font-weight: 950;
       letter-spacing: 0;
@@ -694,7 +694,7 @@
       display: block;
       margin-top: 7px;
       color: rgba(124,179,66,0.9);
-      font-size: 10px;
+      font-size: 9px;
       font-weight: 850;
       letter-spacing: 0.12em;
       text-transform: uppercase;
@@ -800,7 +800,7 @@
     .poster-finish-copy {
       position: absolute;
       left: 18px;
-      bottom: 160px;
+      bottom: 174px;
       z-index: 8;
       width: calc(100% - 148px);
       max-width: 318px;
@@ -815,7 +815,7 @@
     .poster-foot {
       margin: 4px 0 0;
       color: rgba(235,244,207,0.78);
-      font-size: 10px;
+      font-size: 9.5px;
       line-height: 1.34;
     }
     .poster-foot span {
@@ -924,35 +924,6 @@
       object-position: center bottom;
       filter: saturate(1.03) contrast(1.08) brightness(0.94);
     }
-    .poster-preview.has-runner-photo:not(.has-cutout-photo) .poster-runner-photo img {
-      object-fit: cover;
-      object-position: 58% bottom;
-    }
-    .poster-preview.has-raw-runner-photo .poster-runner-photo {
-      right: 12px;
-      bottom: 82px;
-      z-index: 3;
-      width: 124px;
-      height: 210px;
-      opacity: 0.86;
-      filter: drop-shadow(0 22px 20px rgba(0,0,0,0.62));
-      -webkit-mask-image:
-        radial-gradient(ellipse at 56% 48%, #000 0%, #000 42%, rgba(0,0,0,0.82) 58%, transparent 76%),
-        linear-gradient(180deg, transparent 0%, #000 10%, #000 86%, transparent 100%);
-      -webkit-mask-composite: source-in;
-      mask-image:
-        radial-gradient(ellipse at 56% 48%, #000 0%, #000 42%, rgba(0,0,0,0.82) 58%, transparent 76%),
-        linear-gradient(180deg, transparent 0%, #000 10%, #000 86%, transparent 100%);
-      mask-composite: intersect;
-    }
-    .poster-preview.has-raw-runner-photo .poster-runner-photo img {
-      width: 205%;
-      max-width: none;
-      object-fit: cover;
-      object-position: 53% center;
-      transform: translateX(-32%);
-      filter: saturate(1.02) contrast(1.08) brightness(0.88);
-    }
     .poster-runner-photo::before {
       content: "";
       position: absolute;
@@ -966,11 +937,11 @@
       z-index: -1;
     }
     .poster-preview.has-cutout-photo .poster-runner-photo {
-      right: -60px;
-      bottom: 86px;
+      right: -2px;
+      bottom: 138px;
       z-index: 4;
-      width: 340px;
-      height: 420px;
+      width: 154px;
+      height: 260px;
       overflow: hidden;
       filter: drop-shadow(0 30px 24px rgba(0,0,0,0.68));
       -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
@@ -979,25 +950,25 @@
       mask-composite: initial;
     }
     .poster-preview.has-cutout-photo .poster-runner-photo img {
+      width: 100%;
+      height: 100%;
       object-fit: contain;
-      object-position: 72% bottom;
+      object-position: center bottom;
       filter: saturate(1.04) contrast(1.08) brightness(0.94);
+      transform: translate(var(--runner-fit-x, 0%), var(--runner-fit-y, 0%)) scale(var(--runner-fit-scale, 1));
+      transform-origin: center bottom;
     }
     .poster-photo-focus-main-runner img {
-      width: 184%;
+      width: 100%;
+      height: 100%;
       max-width: none;
-      transform: translateX(-38%);
     }
     .poster-photo-focus-main-runner {
-      clip-path: inset(0 0 0 34%);
+      clip-path: none;
       -webkit-mask-image:
-        linear-gradient(90deg, transparent 0%, transparent 32%, #000 46%, #000 100%),
         linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
-      -webkit-mask-composite: source-in;
       mask-image:
-        linear-gradient(90deg, transparent 0%, transparent 32%, #000 46%, #000 100%),
         linear-gradient(180deg, #000 0%, #000 95%, transparent 100%);
-      mask-composite: intersect;
     }
     .poster-preview.has-cutout-photo .poster-title-lockup {
       top: 46px;
@@ -1006,7 +977,7 @@
     }
     .poster-preview.has-cutout-photo .poster-year {
       margin-bottom: 10px;
-      font-size: clamp(68px, 18vw, 104px);
+      font-size: clamp(54px, 15vw, 84px);
     }
     .poster-preview.has-cutout-photo .poster-event-name {
       font-size: clamp(21px, 5.9vw, 31px);
@@ -1112,12 +1083,12 @@
     .poster-meta-grid {
       position: absolute;
       left: 18px;
-      right: 108px;
+      right: 18px;
       bottom: 14px;
       z-index: 7;
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 8px;
+      grid-template-columns: 1.2fr 1.15fr 0.9fr 0.75fr;
+      gap: 7px;
       padding-top: 9px;
       border-top: 1px solid rgba(124,179,66,0.45);
     }
@@ -1126,6 +1097,120 @@
       right: 18px;
       bottom: 14px;
       gap: 10px;
+    }
+    .poster-preview.poster-layout-official .poster-medal-large,
+    .poster-preview.poster-layout-official .poster-medal-photo {
+      right: 22px;
+      bottom: 148px;
+      width: 72px;
+      height: 72px;
+    }
+    .poster-preview.poster-layout-certificate {
+      border-color: rgba(23,32,24,0.16);
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.92), rgba(255,255,255,0.78)),
+        linear-gradient(135deg, #fbf7e9, #dcebd2);
+    }
+    .poster-preview.poster-layout-certificate::before {
+      background:
+        radial-gradient(circle at 78% 30%, rgba(124,179,66,0.16), transparent 9rem),
+        linear-gradient(180deg, rgba(23,32,24,0.02), transparent 55%);
+      opacity: 1;
+    }
+    .poster-preview.poster-layout-certificate::after {
+      background:
+        linear-gradient(180deg, transparent 58%, rgba(255,255,255,0.55) 100%);
+      opacity: 1;
+    }
+    .poster-layout-certificate .poster-main-copy {
+      text-shadow: none;
+    }
+    .poster-layout-certificate .poster-kicker {
+      color: #17412d;
+      border-color: transparent;
+      background: rgba(124,179,66,0.2);
+    }
+    .poster-layout-certificate .poster-year,
+    .poster-layout-certificate .poster-event-name,
+    .poster-layout-certificate .poster-subline {
+      color: #132118;
+    }
+    .poster-layout-certificate .poster-title-en,
+    .poster-layout-certificate .poster-distance-badge {
+      color: #607d3b;
+    }
+    .poster-layout-certificate .poster-foot {
+      color: rgba(23,32,24,0.68);
+    }
+    .poster-layout-certificate .poster-time {
+      color: #17412d;
+    }
+    .poster-layout-certificate .poster-stamp {
+      top: auto;
+      right: 22px;
+      bottom: 96px;
+      color: #17412d;
+      border-color: rgba(23,65,45,0.28);
+      background: rgba(255,255,255,0.52);
+    }
+    .poster-layout-certificate .poster-route {
+      right: 22px;
+      top: 198px;
+      width: 150px;
+      height: 210px;
+      opacity: 0.32;
+    }
+    .poster-layout-certificate .poster-route path {
+      stroke: rgba(96,125,59,0.68);
+    }
+    .poster-layout-certificate .poster-route circle {
+      fill: #d5a54f;
+    }
+    .poster-layout-certificate .poster-route-art {
+      right: 18px;
+      top: 188px;
+      bottom: auto;
+      width: 128px;
+      height: 170px;
+      border: 1px solid rgba(23,32,24,0.1);
+      border-radius: 10px;
+      background: rgba(255,255,255,0.7);
+      box-shadow: 0 16px 30px rgba(23,32,24,0.16);
+      opacity: 0.78;
+      transform: rotate(2deg);
+      -webkit-mask-image: none;
+      mask-image: none;
+    }
+    .poster-layout-certificate .poster-route-art img {
+      filter: grayscale(1) sepia(0.34) hue-rotate(38deg) saturate(1.2) contrast(1.05) brightness(1.08);
+      mix-blend-mode: multiply;
+    }
+    .poster-layout-certificate .poster-route-art::after {
+      background:
+        radial-gradient(circle at 72% 68%, rgba(213,165,79,0.72), transparent 28%),
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.52));
+      mix-blend-mode: normal;
+    }
+    .poster-layout-certificate .poster-medal-large,
+    .poster-layout-certificate .poster-medal-photo {
+      right: 28px;
+      top: 256px;
+      bottom: auto;
+      width: 66px;
+      height: 66px;
+      box-shadow: inset 0 0 0 8px rgba(255,255,255,0.18), 0 12px 24px rgba(23,32,24,0.16);
+    }
+    .poster-layout-certificate .poster-meta-grid {
+      border-top-color: rgba(23,32,24,0.14);
+    }
+    .poster-layout-certificate .poster-meta-item {
+      border-left-color: rgba(23,32,24,0.14);
+    }
+    .poster-layout-certificate .poster-meta-item span {
+      color: rgba(23,32,24,0.56);
+    }
+    .poster-layout-certificate .poster-meta-item b {
+      color: #172018;
     }
     .poster-meta-item {
       min-width: 0;
@@ -1149,7 +1234,7 @@
       margin-top: 3px;
       overflow: hidden;
       color: rgba(235,244,207,0.9);
-      font-size: 10px;
+      font-size: 9.5px;
       font-weight: 900;
       line-height: 1.18;
       text-overflow: ellipsis;
@@ -1201,29 +1286,54 @@
         height: 58px;
         font-size: 10px;
       }
+      .poster-title-lockup {
+        left: 14px;
+        top: 48px;
+        width: calc(100% - 94px);
+      }
+      .poster-year {
+        margin-bottom: 10px;
+        font-size: clamp(52px, 14vw, 68px);
+      }
+      .poster-event-name {
+        font-size: clamp(20px, 5.8vw, 27px);
+      }
+      .poster-finish-copy {
+        left: 14px;
+        bottom: 170px;
+        width: calc(100% - 126px);
+      }
+      .poster-foot {
+        font-size: 8.8px;
+      }
+      .poster-meta-grid {
+        left: 14px;
+        right: 14px;
+        gap: 5px;
+      }
+      .poster-meta-item {
+        padding-left: 5px;
+      }
+      .poster-meta-item b {
+        font-size: 8.8px;
+      }
       .poster-preview.has-cutout-photo .poster-title-lockup {
         left: 14px;
         top: 44px;
         width: calc(100% - 94px);
       }
       .poster-preview.has-cutout-photo .poster-year {
-        font-size: clamp(62px, 17vw, 82px);
+        font-size: clamp(52px, 14vw, 68px);
       }
       .poster-preview.has-cutout-photo .poster-event-name {
         font-size: clamp(20px, 5.6vw, 26px);
         max-width: 88%;
       }
       .poster-preview.has-cutout-photo .poster-runner-photo {
-        right: -58px;
-        bottom: 92px;
-        width: 300px;
-        height: 366px;
-      }
-      .poster-preview.has-raw-runner-photo .poster-runner-photo {
-        right: 8px;
-        bottom: 78px;
-        width: 112px;
-        height: 188px;
+        right: -2px;
+        bottom: 122px;
+        width: 138px;
+        height: 232px;
       }
       .poster-preview.has-cutout-photo .poster-time-block {
         left: 14px;
@@ -1825,6 +1935,27 @@
       return goalById(mode || "pb");
     }
 
+    function shouldUseRunnerHeroPoster(assets, goal) {
+      const runnerPhoto = assets?.runnerPhoto;
+      const fitAllowsPoster = runnerPhoto?.runnerFit?.usable !== false;
+      return Boolean(runnerPhoto?.dataUrl && (runnerPhoto.cutout || runnerPhoto.aiCutout) && fitAllowsPoster && goal.id === "photo");
+    }
+
+    function posterLayoutClass(goal, useRunnerHero) {
+      if (useRunnerHero) return "poster-layout-runner has-runner-photo has-cutout-photo";
+      if (goal.id === "finish") return "poster-layout-certificate";
+      return "poster-layout-official";
+    }
+
+    function runnerPhotoFitStyle(runnerPhoto) {
+      const fit = runnerPhoto?.runnerFit || {};
+      const scale = clampNumber(fit.scale ?? 1, 0.72, 1.12);
+      const offsetPattern = /^-?\d+(\.\d+)?%$/;
+      const x = offsetPattern.test(String(fit.x || "")) ? String(fit.x) : "0%";
+      const y = offsetPattern.test(String(fit.y || "")) ? String(fit.y) : "0%";
+      return ` style="--runner-fit-scale:${scale};--runner-fit-x:${safe(x)};--runner-fit-y:${safe(y)}"`;
+    }
+
     function posterCopyFor(result, user, goal) {
       const city = result.city || "这座城";
       const name = user?.nickname || "跑者";
@@ -1868,7 +1999,7 @@
     }
 
     function posterFootHtml(copy) {
-      return [copy.line, copy.styleLine, copy.foot]
+      return [copy.styleLine, copy.foot]
         .filter(Boolean)
         .map(line => `<span>${posterLineHtml(line)}</span>`)
         .join("");
@@ -2386,6 +2517,99 @@
       return canvas.toDataURL(mimeType, quality);
     }
 
+    function clampNumber(value, min, max) {
+      const number = Number(value);
+      if (!Number.isFinite(number)) return min;
+      return Math.max(min, Math.min(max, number));
+    }
+
+    async function runnerCutoutBounds(dataUrl, alphaThreshold = 24) {
+      const image = await imageFromDataUrl(dataUrl);
+      const width = image.naturalWidth || image.width;
+      const height = image.naturalHeight || image.height;
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, width);
+      canvas.height = Math.max(1, height);
+      const context = canvas.getContext("2d");
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      const pixels = context.getImageData(0, 0, canvas.width, canvas.height).data;
+      let minX = canvas.width;
+      let minY = canvas.height;
+      let maxX = -1;
+      let maxY = -1;
+      for (let y = 0; y < canvas.height; y += 1) {
+        for (let x = 0; x < canvas.width; x += 1) {
+          const alpha = pixels[(y * canvas.width + x) * 4 + 3];
+          if (alpha <= alphaThreshold) continue;
+          if (x < minX) minX = x;
+          if (y < minY) minY = y;
+          if (x > maxX) maxX = x;
+          if (y > maxY) maxY = y;
+        }
+      }
+      if (maxX < minX || maxY < minY) {
+        return { x: 0, y: 0, width: canvas.width, height: canvas.height, sourceWidth: canvas.width, sourceHeight: canvas.height, usable: false };
+      }
+      const boxWidth = maxX - minX + 1;
+      const boxHeight = maxY - minY + 1;
+      const fillWidth = boxWidth / canvas.width;
+      const fillHeight = boxHeight / canvas.height;
+      return {
+        x: minX,
+        y: minY,
+        width: boxWidth,
+        height: boxHeight,
+        sourceWidth: canvas.width,
+        sourceHeight: canvas.height,
+        fillWidth,
+        fillHeight,
+        centerX: (minX + boxWidth / 2) / canvas.width,
+        centerY: (minY + boxHeight / 2) / canvas.height,
+        usable: fillWidth > 0.12 && fillHeight > 0.28
+      };
+    }
+
+    async function trimRunnerCutout(dataUrl) {
+      const image = await imageFromDataUrl(dataUrl);
+      const bounds = await runnerCutoutBounds(dataUrl);
+      if (!bounds.usable) {
+        return {
+          dataUrl,
+          runnerFit: { usable: false, scale: 1, x: "0%", y: "0%" }
+        };
+      }
+      const padX = Math.round(bounds.width * 0.12);
+      const padTop = Math.round(bounds.height * 0.08);
+      const padBottom = Math.round(bounds.height * 0.04);
+      const sx = Math.max(0, bounds.x - padX);
+      const sy = Math.max(0, bounds.y - padTop);
+      const sw = Math.min(bounds.sourceWidth - sx, bounds.width + padX * 2);
+      const sh = Math.min(bounds.sourceHeight - sy, bounds.height + padTop + padBottom);
+      const canvas = document.createElement("canvas");
+      canvas.width = Math.max(1, sw);
+      canvas.height = Math.max(1, sh);
+      const context = canvas.getContext("2d");
+      context.drawImage(image, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+      const aspectRatio = canvas.width / canvas.height;
+      const targetScale = clampNumber(aspectRatio < 0.48 ? 0.94 : aspectRatio > 0.72 ? 0.84 : 0.9, 0.78, 1);
+      return {
+        dataUrl: canvas.toDataURL("image/png", 0.92),
+        runnerFit: {
+          usable: true,
+          scale: targetScale,
+          x: "0%",
+          y: "0%",
+          aspectRatio: Number(aspectRatio.toFixed(3)),
+          bounds: {
+            width: bounds.width,
+            height: bounds.height,
+            sourceWidth: bounds.sourceWidth,
+            sourceHeight: bounds.sourceHeight
+          }
+        }
+      };
+    }
+
     function posterExportCssText() {
       return [...document.styleSheets].map(sheet => {
         try {
@@ -2472,7 +2696,8 @@
         output: { format: "image/png", quality: 0.92 }
       });
       const cutoutDataUrl = await fileToDataUrl(cutoutBlob);
-      return resizeDataUrl(cutoutDataUrl, 1100, "image/png", 0.92);
+      const resizedCutout = await resizeDataUrl(cutoutDataUrl, 1100, "image/png", 0.92);
+      return trimRunnerCutout(resizedCutout);
     }
 
     async function readResultAssets(form, existingAssets = {}) {
@@ -2550,7 +2775,8 @@
 
     async function processRunnerPhotoCutout(resultId, job) {
       try {
-        const cutoutDataUrl = await removeRunnerPhotoBackground(job.file);
+        const cutoutResult = await removeRunnerPhotoBackground(job.file);
+        const cutoutDataUrl = cutoutResult.dataUrl;
         const index = db.results.findIndex(result => result.id === resultId);
         if (index < 0) return;
         const result = db.results[index];
@@ -2573,6 +2799,7 @@
               cutout: true,
               aiCutout: true,
               cutoutPending: false,
+              runnerFit: cutoutResult.runnerFit,
               pendingName: "",
               pendingFingerprint: "",
               dataSource: "browser-ai-cutout",
@@ -3188,7 +3415,7 @@
               <div class="asset-upload">
                 <label>个人照片</label>
                 <input name="runnerPhoto" type="file" accept="image/*" data-asset-file data-asset-type="runnerPhoto">
-                <small>保存后先显示原图，避免等待；正面跑姿效果最好</small>
+                <small>保存后先收录原图，抠图完成后进入人物海报；正面跑姿效果最好</small>
               </div>
               <div class="asset-upload">
                 <label>赛事路线图</label>
@@ -3266,16 +3493,14 @@
       const posterSubline = [copy.title, displayLevel(result.level)].filter(Boolean).join(" · ");
       const assets = result.assets || {};
       const cutoutPending = Boolean(assets.runnerPhoto?.cutoutPending);
-      const hasUsableCutout = Boolean(assets.runnerPhoto?.dataUrl && (assets.runnerPhoto?.cutout || assets.runnerPhoto?.aiCutout));
-      const hasRunnerPhoto = Boolean(assets.runnerPhoto?.dataUrl);
-      const hasCutoutPhoto = hasRunnerPhoto && Boolean(assets.runnerPhoto?.cutout || assets.runnerPhoto?.aiCutout);
-      const hasRawRunnerPhoto = hasRunnerPhoto && !hasCutoutPhoto;
+      const renderRunnerPhoto = shouldUseRunnerHeroPoster(assets, goal);
+      const posterLayout = posterLayoutClass(goal, renderRunnerPhoto);
       const photoAlbumUrl = safeExternalUrl(result.photoAlbumUrl);
       return `
         <div class="stack">
           <section class="card poster-card">
             <div class="poster-stage">
-              <div class="poster-preview ${hasRunnerPhoto ? "has-runner-photo" : ""} ${hasCutoutPhoto ? "has-cutout-photo" : ""} ${hasRawRunnerPhoto ? "has-raw-runner-photo" : ""}">
+              <div class="poster-preview ${posterLayout}">
                 <span class="poster-kicker">生成完赛海报</span>
                 ${assets.routeImage?.dataUrl ? `
                   <div class="poster-route-art" aria-hidden="true">
@@ -3288,8 +3513,8 @@
                     <circle cx="130" cy="34" r="5" fill="#7CB342"></circle>
                   </svg>
                 `}
-                ${hasRunnerPhoto ? `
-                  <div class="poster-runner-photo ${hasCutoutPhoto ? "poster-photo-focus-main-runner" : ""}" aria-hidden="true">
+                ${renderRunnerPhoto ? `
+                  <div class="poster-runner-photo poster-photo-focus-main-runner"${runnerPhotoFitStyle(assets.runnerPhoto)} aria-hidden="true">
                     <img src="${safe(assets.runnerPhoto.dataUrl)}" alt="">
                   </div>
                 ` : ""}

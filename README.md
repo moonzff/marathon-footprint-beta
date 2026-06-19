@@ -83,12 +83,15 @@ npm test
 ├── assets/                  # 页面视觉素材
 ├── beta.html                # 内测主应用
 ├── index.html               # Demo/介绍页
+├── docs/poster-lab/         # 完赛海报方向设计存档（历史实验，方向已并入 beta.html）
 ├── netlify.toml             # Netlify 配置和路由
 ├── netlify/functions/api.mjs# Netlify Blobs 数据接口
 ├── package.json
 ├── package-lock.json
 └── test-ocr-logic.mjs       # 回归测试
 ```
+
+`docs/poster-lab/` 是完赛海报的早期视觉实验区：探索了 `official`（赛事官方感）、`runner`（跑者主角感）、`certificate`（成绩证书感）三个方向，相关设计已整合进 `beta.html`，此处仅作历史参考存档。详见 `docs/poster-lab/README.md`。
 
 ## 注意事项
 

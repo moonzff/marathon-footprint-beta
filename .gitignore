@@ -5,3 +5,9 @@ npm-debug.log*
 .env
 .env.*
 !.env.example
+
+# 工具与构建产物(本地保留,不入库)
+.playwright-mcp/
+docs/.report-data/
+report-top.png
+runprint-report-cards.png

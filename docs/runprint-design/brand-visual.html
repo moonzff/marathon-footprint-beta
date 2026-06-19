@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>跑印 Runprint · 品牌视觉首发 v0.1</title>
+<style>
+:root{
+  --green-deep:#10160F; --green:#17412D; --green-2:#1E2A20; --green-line:#2C4636;
+  --paper:#FFF6D9; --paper-2:#F4E0B0; --paper-dim:#cbbf9e;
+  --gold:#D6A553; --gold-2:#F7BD72; --moss:#8BC34A; --moss-2:#D7F6B0; --ember:#CF6A35;
+  --ink:#15140f; --mut:#7d7768;
+}
+*{box-sizing:border-box}
+body{margin:0;background:#f3efe4;color:var(--ink);
+  font:16px/1.65 -apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif}
+.wrap{max-width:1080px;margin:0 auto;padding:0 24px 120px}
+.mono{font-family:"SF Mono",ui-monospace,"Menlo",monospace;font-variant-numeric:tabular-nums}
+h2{font-size:14px;letter-spacing:3px;color:var(--mut);text-transform:uppercase;margin:64px 0 6px;font-weight:700}
+h2 .cn{color:var(--ink);letter-spacing:0;font-size:22px;display:block;margin-top:2px;text-transform:none}
+.note{color:var(--mut);font-size:13px;margin:0 0 22px}
+/* hero */
+.hero{background:radial-gradient(120% 90% at 50% 0%,#1d4a34 0%,var(--green) 45%,var(--green-deep) 100%);
+  color:var(--paper);border-radius:20px;padding:64px 32px 56px;text-align:center;margin-top:28px;
+  box-shadow:0 24px 60px rgba(16,22,15,.28);position:relative;overflow:hidden}
+.hero .stamp-bg{position:absolute;inset:0;opacity:.05;display:flex;align-items:center;justify-content:center}
+.hero .wordmark{font-size:74px;font-weight:800;letter-spacing:8px;margin:18px 0 2px;
+  font-family:"Songti SC","STSong",serif}
+.hero .en{font-size:18px;letter-spacing:9px;color:var(--gold-2);text-transform:uppercase;font-weight:600}
+.hero .slogan{font-size:27px;margin:30px 0 6px;font-family:"Songti SC","STSong",serif;color:#fff}
+.hero .slogan b{color:var(--gold-2)}
+.hero .slogan-en{color:var(--paper-dim);letter-spacing:2px;font-size:13px}
+/* mark colors */
+.mk-ring{fill:none}
+/* arc sweep fixed below */
+.grid{display:grid;gap:20px}
+.cols-3{grid-template-columns:repeat(3,1fr)}
+.cols-2{grid-template-columns:1fr 1fr}
+.card{background:#fff;border:1px solid #e6e0d0;border-radius:16px;padding:22px;text-align:center}
+.card h4{margin:0 0 4px;font-size:15px}
+.card p{margin:0;color:var(--mut);font-size:12.5px;line-height:1.5}
+.card .swatchbox{height:54px;border-radius:9px;margin-bottom:10px}
+/* logo anatomy */
+.anatomy{display:flex;gap:30px;align-items:center;flex-wrap:wrap;background:#fff;border:1px solid #e6e0d0;border-radius:16px;padding:28px}
+.anatomy ul{margin:0;padding-left:18px;color:var(--ink);font-size:14px}
+.anatomy ul li{margin:7px 0}
+.anatomy ul li b{color:var(--green)}
+.darkcard{background:var(--green);border:1px solid var(--green-line);border-radius:16px;padding:22px;text-align:center;color:var(--paper)}
+.darkcard h4{color:var(--paper)}.darkcard p{color:var(--paper-dim)}
+/* color row */
+.swatch{border-radius:12px;padding:14px 16px;min-height:96px;display:flex;flex-direction:column;justify-content:flex-end;border:1px solid rgba(0,0,0,.06)}
+.swatch .nm{font-weight:700;font-size:14px}
+.swatch .hex{font-size:12px;opacity:.85}
+.swatch .role{font-size:11px;opacity:.7;margin-top:2px}
+/* type */
+.specimen{background:#fff;border:1px solid #e6e0d0;border-radius:16px;padding:28px}
+.specimen .big-cn{font-family:"Songti SC","STSong",serif;font-size:40px;font-weight:700;margin:0 0 4px}
+.specimen .big-en{font-size:34px;font-weight:700;letter-spacing:-.5px;margin:14px 0 4px}
+.specimen .num{font-size:46px;font-weight:800;letter-spacing:1px;color:var(--green)}
+.specimen .lbl{color:var(--mut);font-size:12px;letter-spacing:1px;text-transform:uppercase}
+.specimen hr{border:0;border-top:1px solid #eee;margin:18px 0}
+/* slogan lockups */
+.lock{background:var(--green-deep);color:var(--paper);border-radius:14px;padding:24px 26px;margin-bottom:14px;display:flex;align-items:baseline;gap:16px;flex-wrap:wrap}
+.lock .role{color:var(--gold-2);font-size:11px;letter-spacing:2px;text-transform:uppercase;flex:0 0 130px}
+.lock .txt{font-size:22px;font-family:"Songti SC","STSong",serif}
+.lock .txt.sm{font-size:17px;font-family:inherit}
+.lock .txt b{color:var(--gold-2)}
+/* poster mockup */
+.poster-row{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.poster{width:340px;background:linear-gradient(180deg,#1d4a34,var(--green) 40%,var(--green-deep));
+  border-radius:22px;padding:26px 24px 22px;color:var(--paper);position:relative;overflow:hidden;
+  box-shadow:0 20px 50px rgba(16,22,15,.3);flex:0 0 auto}
+.poster .pmark{position:absolute;right:-30px;bottom:-30px;opacity:.07}
+.poster .ptop{display:flex;justify-content:space-between;align-items:center;font-size:11px;letter-spacing:1px;color:var(--paper-dim)}
+.poster .laurel{display:flex;align-items:center;gap:6px;color:var(--gold-2);font-weight:700;font-size:12px}
+.poster .race{font-family:"Songti SC","STSong",serif;font-size:23px;margin:22px 0 2px;font-weight:700}
+.poster .rdate{color:var(--paper-dim);font-size:12px;letter-spacing:1px}
+.poster .time{font-size:62px;font-weight:800;letter-spacing:1px;margin:14px 0 0;font-variant-numeric:tabular-nums;color:#fff;line-height:1}
+.poster .pb{display:inline-block;background:linear-gradient(90deg,var(--gold),var(--gold-2));color:#3a2a08;
+  font-weight:800;font-size:12px;padding:3px 10px;border-radius:20px;margin-top:10px;letter-spacing:1px}
+.poster .stats{display:flex;gap:18px;margin:20px 0 0;border-top:1px solid var(--green-line);padding-top:14px}
+.poster .stats div .v{font-size:18px;font-weight:800;font-variant-numeric:tabular-nums}
+.poster .stats div .k{font-size:10px;color:var(--paper-dim);letter-spacing:1px}
+.poster .grade{display:flex;align-items:center;gap:10px;margin-top:18px;background:rgba(214,165,83,.12);
+  border:1px solid rgba(214,165,83,.3);border-radius:10px;padding:9px 12px}
+.poster .grade .gtxt b{color:var(--gold-2)}.poster .grade .gtxt span{font-size:11px;color:var(--paper-dim);display:block}
+.poster .pslogan{margin-top:20px;text-align:center;font-family:"Songti SC","STSong",serif;font-size:14px;color:var(--paper)}
+.poster .pstamp{position:absolute;right:18px;bottom:74px;opacity:.55}
+.cap{color:var(--mut);font-size:12.5px;max-width:320px}
+.foot{margin-top:70px;padding-top:22px;border-top:1px solid #ddd;color:var(--mut);font-size:13px}
+.tag{display:inline-block;background:#e9e3d3;color:#6b6450;font-size:11px;padding:2px 8px;border-radius:20px;margin-left:6px}
+</style></head>
+<body><div class="wrap">
+
+<!-- ===== HERO ===== -->
+<div class="hero">
+  <div class="stamp-bg">
+    <svg width="420" height="420" viewBox="0 0 200 200"><g class="mk-ring" stroke="#fff" stroke-width="2">
+      <circle cx="100" cy="100" r="22"/><circle cx="100" cy="100" r="36"/><circle cx="100" cy="100" r="50"/>
+      <circle cx="100" cy="100" r="64"/><circle cx="100" cy="100" r="78"/></g></svg>
+  </div>
+  <!-- primary mark -->
+  <svg width="120" height="120" viewBox="0 0 200 200" style="position:relative">
+    <g fill="none" stroke="var(--gold-2)" stroke-width="5" stroke-linecap="round">
+      <circle cx="100" cy="100" r="20"/>
+      <circle cx="100" cy="100" r="34"/>
+      <path d="M 89.5 51.3 A 50 50 0 1 0110.5 51.3"/>
+      <path d="M 81 39.4 A 64 64 0 1 0119 39.4"/>
+    </g>
+    <!-- start/finish arch notch -->
+    <path d="M 92 60 L 92 50 L 108 50 L 108 60" fill="none" stroke="var(--gold-2)" stroke-width="4" stroke-linecap="round"/>
+    <!-- arrowhead on outer track -->
+    <path d="M 119 39.4 l 9 -3 l -2 9 z" fill="var(--gold-2)"/>
+  </svg>
+  <div class="wordmark">跑印</div>
+  <div class="en">Runprint</div>
+  <div class="slogan">你跑过的每一步,<b>都算数。</b></div>
+  <div class="slogan-en">EVERY FINISH, ON THE RECORD.</div>
+</div>
+<p class="note" style="text-align:center;margin-top:14px">品牌视觉首发 v0.1 · 矢量草案,供拍方向用 · 配色/Logo 比例待精修 · 2026-06-19</p>
+
+<!-- ===== LOGO ANATOMY ===== -->
+<h2>01 — Logo<span class="cn">标志 · 同心环纹</span></h2>
+<p class="note">一个符号,四义同形:指纹(唯一·可信)· 跑道折返圈(运动)· 等高线(足迹/地理)· 完赛圈数(生涯)。环心缺口=起跑/完赛拱门,外圈断开收口成带箭头的折返跑道。</p>
+<div class="anatomy">
+  <svg width="150" height="150" viewBox="0 0 200 200">
+    <g fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round">
+      <circle cx="100" cy="100" r="20"/><circle cx="100" cy="100" r="34"/>
+      <path d="M 89.5 51.3 A 50 50 0 1 0110.5 51.3"/>
+      <path d="M 81 39.4 A 64 64 0 1 0119 39.4"/>
+    </g>
+    <path d="M 92 60 L 92 50 L 108 50 L 108 60" fill="none" stroke="var(--ember)" stroke-width="4" stroke-linecap="round"/>
+    <path d="M 119 39.4 l 9 -3 l -2 9 z" fill="var(--green)"/>
+  </svg>
+  <ul>
+    <li><b>环心缺口</b> = 起跑/完赛拱门(橙色高亮)——一切从这里出发、回到这里</li>
+    <li><b>内圈实环</b> = 指纹核心,身份的唯一性与可信</li>
+    <li><b>外圈断口 + 箭头</b> = 折返跑道与运动方向</li>
+    <li><b>环越多</b> = 跑过的圈越多 / 完赛越多 → 画像越厚(会成长的标志)</li>
+  </ul>
+</div>
+
+<!-- ===== MARK VARIATIONS ===== -->
+<h2>02 — Mark variations<span class="cn">标志变体</span></h2>
+<div class="grid cols-3">
+  <div class="card">
+    <svg width="84" height="84" viewBox="0 0 200 200"><g fill="none" stroke="var(--green)" stroke-width="6" stroke-linecap="round">
+      <circle cx="100" cy="100" r="24"/><path d="M 86 56 A 56 56 0 1 0114 56"/><path d="M 78 41 A 72 72 0 1 0122 41"/></g>
+      <path d="M 90 62 L 90 50 L 110 50 L 110 62" fill="none" stroke="var(--green)" stroke-width="5" stroke-linecap="round"/>
+      <path d="M 122 41 l 10 -3 l -2 10 z" fill="var(--green)"/></svg>
+    <h4>App 图标版</h4><p>极简到环纹+缺口跑道,小尺寸/去色仍可辨</p>
+  </div>
+  <div class="darkcard">
+    <svg width="84" height="84" viewBox="0 0 200 200"><g fill="none" stroke="var(--paper)" stroke-width="5" stroke-linecap="round">
+      <circle cx="100" cy="100" r="20"/><circle cx="100" cy="100" r="34"/><path d="M 89.5 51.3 A 50 50 0 1 0110.5 51.3"/><path d="M 81 39.4 A 64 64 0 1 0119 39.4"/></g>
+      <path d="M 92 60 L 92 50 L 108 50 L 108 60" fill="none" stroke="var(--gold-2)" stroke-width="4" stroke-linecap="round"/></svg>
+    <h4>深底反白版</h4><p>档案绿底配米纸/金,主用于海报与封面</p>
+  </div>
+  <div class="card">
+    <!-- stamp version -->
+    <svg width="100" height="100" viewBox="0 0 200 200">
+      <circle cx="100" cy="100" r="92" fill="none" stroke="var(--gold)" stroke-width="3" stroke-dasharray="2 4"/>
+      <circle cx="100" cy="100" r="80" fill="none" stroke="var(--gold)" stroke-width="1.5"/>
+      <g fill="none" stroke="var(--gold)" stroke-width="4" stroke-linecap="round">
+        <circle cx="100" cy="100" r="16"/><path d="M 92 73 A 28 28 0 1 0108 73"/><path d="M 85 60 A 42 42 0 1 0115 60"/></g>
+      <path d="M 94 70 L 94 62 L 106 62 L 106 70" fill="none" stroke="var(--gold)" stroke-width="3.5"/>
+      <text x="100" y="150" text-anchor="middle" fill="var(--gold)" font-size="11" letter-spacing="2" font-weight="700">RUNPRINT · 完赛认证</text>
+    </svg>
+    <h4>完赛邮戳版</h4><p>盖在海报右下:城市+年份+距离,烫金低透明度=防伪荣誉印记(用户不舍得裁)</p>
+  </div>
+</div>
+
+<!-- ===== GRADE BADGES ===== -->
+<h2>03 — Grade badges<span class="cn">大众等级 · 桂冠徽章</span></h2>
+<p class="note">把中国田协官方等级(精英/一级/二级)做成独占视觉资产:环纹外加桂冠半环,按等级变金属质感。这是 Strava/Athlinks 抄不走的本土制度红利。</p>
+<div class="grid cols-3">
+  <div class="darkcard">
+    <svg width="92" height="92" viewBox="0 0 200 200">
+      <path d="M 55 150 Q 18 110 40 60" fill="none" stroke="#F7D98A" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 145 150 Q 182 110 160 60" fill="none" stroke="#F7D98A" stroke-width="6" stroke-linecap="round"/>
+      <g fill="none" stroke="#F7D98A" stroke-width="5" stroke-linecap="round"><circle cx="100" cy="100" r="20"/><circle cx="100" cy="100" r="34"/><path d="M 89.5 51.3 A 50 50 0 1 0110.5 51.3"/></g>
+      <path d="M 92 60 L 92 50 L 108 50 L 108 60" fill="none" stroke="#F7D98A" stroke-width="4"/>
+    </svg>
+    <h4 style="color:#F7D98A">精英级 · 金</h4><p>全国前列,最高显影</p>
+  </div>
+  <div class="darkcard">
+    <svg width="92" height="92" viewBox="0 0 200 200">
+      <path d="M 55 150 Q 18 110 40 60" fill="none" stroke="#E9EDF0" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 145 150 Q 182 110 160 60" fill="none" stroke="#E9EDF0" stroke-width="6" stroke-linecap="round"/>
+      <g fill="none" stroke="#E9EDF0" stroke-width="5" stroke-linecap="round"><circle cx="100" cy="100" r="20"/><circle cx="100" cy="100" r="34"/><path d="M 89.5 51.3 A 50 50 0 1 0110.5 51.3"/></g>
+      <path d="M 92 60 L 92 50 L 108 50 L 108 60" fill="none" stroke="#E9EDF0" stroke-width="4"/>
+    </svg>
+    <h4 style="color:#E9EDF0">一级 · 银白</h4><p>进阶硬核身份</p>
+  </div>
+  <div class="darkcard">
+    <svg width="92" height="92" viewBox="0 0 200 200">
+      <path d="M 55 150 Q 18 110 40 60" fill="none" stroke="#C8895C" stroke-width="6" stroke-linecap="round"/>
+      <path d="M 145 150 Q 182 110 160 60" fill="none" stroke="#C8895C" stroke-width="6" stroke-linecap="round"/>
+      <g fill="none" stroke="#C8895C" stroke-width="5" stroke-linecap="round"><circle cx="100" cy="100" r="20"/><circle cx="100" cy="100" r="34"/><path d="M 89.5 51.3 A 50 50 0 1 0110.5 51.3"/></g>
+      <path d="M 92 60 L 92 50 L 108 50 L 108 60" fill="none" stroke="#C8895C" stroke-width="4"/>
+    </svg>
+    <h4 style="color:#C8895C">二级 · 古铜</h4><p>入门也体面,"距一级差X分"</p>
+  </div>
+</div>
+
+<!-- ===== COLOR ===== -->
+<h2>04 — Color<span class="cn">色彩系统 · Field Archive</span></h2>
+<p class="note">别人都做"能量/速度/燃烧"(Strava 荧光绿);跑印做"沉淀/凭证/段位"。逻辑:<b>深绿是底(沉淀)· 金是峰值(完赛荣誉)· 橙是行动(唯一 CTA)</b>,三者各司一职不混用。</p>
+<div class="grid cols-3">
+  <div class="swatch" style="background:linear-gradient(135deg,#10160F,#17412D);color:#FFF6D9"><div class="nm">深档案绿</div><div class="hex mono">#10160F → #17412D</div><div class="role">背景·底板·品牌主色</div></div>
+  <div class="swatch" style="background:linear-gradient(135deg,#D6A553,#F7BD72);color:#3a2a08"><div class="nm">完赛金</div><div class="hex mono">#D6A553 → #F7BD72</div><div class="role">奖牌·等级·PB 峰值(情绪专属色)</div></div>
+  <div class="swatch" style="background:#CF6A35;color:#fff"><div class="nm">窑火橙</div><div class="hex mono">#CF6A35</div><div class="role">唯一 CTA(保存/发布海报)</div></div>
+  <div class="swatch" style="background:#FFF6D9;color:#15140f"><div class="nm">暖米纸</div><div class="hex mono">#FFF6D9 / #F4E0B0</div><div class="role">文字·卡片·纸张质感</div></div>
+  <div class="swatch" style="background:#8BC34A;color:#16300a"><div class="nm">苔绿</div><div class="hex mono">#8BC34A / #D7F6B0</div><div class="role">数据/成绩高亮(克制用)</div></div>
+  <div class="swatch" style="background:#1E2A20;color:#cbbf9e"><div class="nm">档案墨绿</div><div class="hex mono">#1E2A20</div><div class="role">卡片底·分隔·次级表面</div></div>
+</div>
+
+<!-- ===== TYPE ===== -->
+<h2>05 — Type<span class="cn">字体系统</span></h2>
+<div class="specimen">
+  <div class="lbl">中文标题 — 现代宋(碑刻/证书感)</div>
+  <div class="big-cn">每一场,都算数 · 完赛即身份</div>
+  <div class="lbl">英文标题 — Grotesk(瑞士理性)</div>
+  <div class="big-en">Runprint · Every finish on the record</div>
+  <hr/>
+  <div class="lbl">成绩数字 — 永远等宽对齐(tabular figures),"成绩册"气质命门</div>
+  <div style="display:flex;gap:40px;flex-wrap:wrap;align-items:baseline;margin-top:8px">
+    <div><span class="num mono">3:28:15</span><div class="lbl">全马 PB</div></div>
+    <div><span class="num mono">1:35:42</span><div class="lbl">半马 PB</div></div>
+    <div><span class="num mono">04:55</span><div class="lbl">平均配速</div></div>
+    <div><span class="num mono">812/35000</span><div class="lbl">总排名</div></div>
+  </div>
+</div>
+
+<!-- ===== SLOGAN ===== -->
+<h2>06 — Voice<span class="cn">Slogan 与口吻</span></h2>
+<div class="lock"><div class="role">主 Slogan</div><div class="txt">你跑过的每一步,<b>都算数。</b><br/><span style="font-size:13px;color:var(--paper-dim);font-family:inherit">Every finish, on the record.</span></div></div>
+<div class="lock"><div class="role">小红书钩子</div><div class="txt sm">你在哪一档,<b>这里说了算。</b></div></div>
+<div class="lock"><div class="role">商店副标题</div><div class="txt sm">跨平台、跨赛事,你的完赛<b>只此一份。</b></div></div>
+<p class="note" style="margin-top:14px">口吻 = 懂行的老跑友帮你总结:数据精确、判断笃定、为你高兴但不替你尖叫。
+✅ "破三了。这个成绩,全国同龄男跑者前 3%。" &nbsp;❌ "太棒啦!你真是最棒的!🎉🔥💪"</p>
+
+<!-- ===== APPLICATION: POSTER ===== -->
+<h2>07 — Application<span class="cn">应用稿 · 完赛海报</span></h2>
+<p class="note">视觉落到产品最强的分享单元:完赛海报。档案绿打底,成绩用等宽大字,完赛金做峰值高亮,桂冠等级 + 右下烫金邮戳水印。<span class="tag">示意稿</span></p>
+<div class="poster-row">
+  <div class="poster">
+    <div class="pmark"><svg width="200" height="200" viewBox="0 0 200 200"><g fill="none" stroke="#fff" stroke-width="4"><circle cx="100" cy="100" r="20"/><circle cx="100" cy="100" r="36"/><circle cx="100" cy="100" r="52"/><circle cx="100" cy="100" r="68"/></g></svg></div>
+    <div class="ptop">
+      <div class="laurel">
+        <svg width="18" height="18" viewBox="0 0 200 200"><g fill="none" stroke="var(--gold-2)" stroke-width="9" stroke-linecap="round"><circle cx="100" cy="100" r="30"/><path d="M 84 56 A 56 56 0 1 0116 56"/></g></svg>
+        大众精英级
+      </div>
+      <div>RUNPRINT</div>
+    </div>
+    <div class="race">2024 厦门马拉松</div>
+    <div class="rdate mono">2024.01.07 · 全程马拉松</div>
+    <div class="time mono">3:28:15</div>
+    <div class="pb">PB · 个人最好成绩</div>
+    <div class="stats">
+      <div><div class="v mono">812</div><div class="k">总排名/35000</div></div>
+      <div><div class="v mono">04:55</div><div class="k">平均配速</div></div>
+      <div><div class="v mono">23城</div><div class="k">城市足迹</div></div>
+    </div>
+    <div class="grade">
+      <svg width="30" height="30" viewBox="0 0 200 200"><g fill="none" stroke="var(--gold-2)" stroke-width="7" stroke-linecap="round"><circle cx="100" cy="100" r="22"/><circle cx="100" cy="100" r="40"/><path d="M 88 56 A 56 56 0 1 0112 56"/></g></svg>
+      <div class="gtxt"><b>距一级还差 4 分钟</b><span>同龄男子 · 全国前 3%</span></div>
+    </div>
+    <div class="pstamp">
+      <svg width="62" height="62" viewBox="0 0 200 200" opacity="0.9"><circle cx="100" cy="100" r="92" fill="none" stroke="var(--gold-2)" stroke-width="4" stroke-dasharray="3 5"/><g fill="none" stroke="var(--gold-2)" stroke-width="6" stroke-linecap="round"><circle cx="100" cy="100" r="22"/><path d="M 86 60 A 56 56 0 1 0114 60"/></g><text x="100" y="158" text-anchor="middle" fill="var(--gold-2)" font-size="13" letter-spacing="1" font-weight="700">厦门·2024·42K</text></svg>
+    </div>
+    <div class="pslogan">你跑过的每一步,都算数。</div>
+  </div>
+  <div>
+    <p class="cap"><b>这一稿要传达的:</b></p>
+    <ul class="cap" style="padding-left:18px">
+      <li>主角永远是<b>成绩与赛事</b>(等宽大字),不是滤镜</li>
+      <li><b>完赛金</b>只用在荣誉峰值(PB/等级/邮戳),克制=高级</li>
+      <li>右下<b>烫金邮戳</b>=防伪荣誉印记,既是水印又让人不舍得裁(自带传播)</li>
+      <li><b>"距一级还差 4 分钟"</b>=渐进披露:给目标感,不羞辱</li>
+      <li>整体像一张<b>可裱起来的完赛证书</b>,不是运营图</li>
+    </ul>
+    <p class="cap" style="margin-top:14px;color:var(--ember)"><b>下一步可做:</b>公开主页稿 · App 首页(印记 Tab)稿 · 装备栏"角色面板"稿。</p>
+  </div>
+</div>
+
+<div class="foot">
+  跑印 Runprint · 品牌视觉首发 v0.1 · 2026-06-19 · 矢量草案(SVG),供方向评审,非终稿。
+  Logo 几何比例、桂冠造型、邮戳排版均可精修;如需交付设计师,本页色值/字体/Logo 结构即为规范底稿。
+  承接 <b>01-foundation.md</b> 的品牌/视觉决策。
+</div>
+
+</div></body></html>

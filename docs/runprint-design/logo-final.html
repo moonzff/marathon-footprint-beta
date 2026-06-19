@@ -1,0 +1,115 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>跑印 Runprint · 主标精修(印鉴+颗粒)</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;600&family=Inter:wght@400;500;600&family=Noto+Serif+SC:wght@600;700&family=Noto+Sans+SC:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#0E0F0D;color:#E9E2D2;font-family:'Inter','Noto Sans SC',sans-serif;font-size:14px;line-height:1.7}
+.wrap{max-width:1080px;margin:0 auto;padding:48px 32px 90px}
+.eyebrow{font-size:11px;letter-spacing:4px;color:#C99A55;text-transform:uppercase}
+h1{font-family:'Playfair Display','Noto Serif SC',serif;font-weight:600;font-size:32px;margin:10px 0 4px;color:#F6EEDD}
+.sub{color:#8d8674;font-size:14px;max-width:72ch}.sub b{color:#D4A85A}
+.hero{display:flex;gap:40px;align-items:center;margin:36px 0 10px;background:#15140f;border:1px solid #2a2820;border-radius:18px;padding:30px 36px}
+.hero .big{width:300px;height:300px;flex:0 0 auto;background:radial-gradient(120% 120% at 62% 38%,#1a2a20,#0c1410);border-radius:24px;display:flex;align-items:center;justify-content:center}
+.hero .big svg{width:84%;height:84%}
+.hero .lock{flex:1}
+.hero .wm{font-family:'Noto Serif SC',serif;font-weight:700;font-size:58px;color:#F6EEDD;letter-spacing:8px}
+.hero .en{font-size:15px;letter-spacing:9px;color:#C99A55;text-transform:uppercase;margin-top:4px}
+.hero .sl{font-family:'Noto Serif SC',serif;font-size:18px;color:#cfc6ad;margin-top:22px}
+.hero .sl small{display:block;font-family:'Playfair Display',serif;font-style:italic;font-size:12px;color:#7c7563;letter-spacing:2px;margin-top:4px}
+h3{font-size:12px;letter-spacing:2px;color:#7c7563;text-transform:uppercase;margin:42px 0 14px;font-weight:600}
+.row{display:grid;grid-template-columns:repeat(5,1fr);gap:14px}
+.v{background:#15140f;border:1px solid #2a2820;border-radius:12px;overflow:hidden}
+.v .art{aspect-ratio:1/1;display:flex;align-items:center;justify-content:center}
+.v .art svg{width:80%;height:80%}
+.v .cap{padding:10px 12px 13px;border-top:1px solid #23211a}
+.v .cap b{font-size:13px;color:#F2E6C4;font-weight:600;font-family:'Noto Sans SC'}
+.v .cap p{margin:3px 0 0;font-size:10.5px;color:#9a8f6e;line-height:1.5}
+.anat{background:#15140f;border:1px solid #2a2820;border-radius:14px;padding:20px 24px;margin-top:16px;font-size:13px;color:#a59c86}
+.anat b{color:#D4A85A}
+.foot{margin-top:30px;color:#6f6a5b;font-size:11px;letter-spacing:1px}
+</style></head>
+<body><div class="wrap">
+<div class="eyebrow">P3 视觉 · 主标精修 · 印鉴 + 颗粒 混血</div>
+<h1>跑印 Runprint · 主标</h1>
+<p class="sub">一枚印鉴<b>正在被银盐颗粒冲洗出来</b>:外缘颗粒由疏到密聚拢成形,印面已落定并压凹,印心留给跑者。凭证感(印)× 概念锐度(颗粒),品牌退居骑缝签发位。<b>矢量精修稿,可继续微调。</b></p>
+
+<div class="hero">
+  <div class="big" id="big"></div>
+  <div class="lock">
+    <div class="wm">跑印</div>
+    <div class="en">Runprint</div>
+    <div class="sl">你跑过的每一步,都算数。<small>EVERY FINISH, ON THE RECORD.</small></div>
+  </div>
+</div>
+<div class="anat">解剖:① <b>外颗粒环</b> 右上密大亮、左下疏小暗 = 散点→显影 · ② <b>压凹印面</b> 左上米白棱 + 右下暗棱 = 钢印立体 · ③ <b>颗粒印心</b> 由颗粒显影成一记上扬印记(留给跑者的位) · ④ <b>暖金高光</b> 仅印面左上棱一道 + 印心一粒,占比&lt;8%,无外圈辉光 · ⑤ <b>骑缝字</b> RUNPRINT·跑印 退居签发位。</div>
+
+<h3>标准变体</h3>
+<div class="row" id="vars"></div>
+
+<p class="foot">跑印 RUNPRINT · 主标精修 v0.2 · 2026.06 · 暖金须哑光旧金(非奖牌金)· 极小尺寸切纯形变体 · 去色靠明暗压凹独立成立</p>
+</div>
+
+<script>
+const G={base:'#0E1710',base2:'#1E3A2A',gold:'#B68A3E',gold2:'#C99A55',gold3:'#D4A85A',bright:'#E8C07A',cream:'#FBF6E9',cream2:'#F8F1DF',dim:'#6E5C38'};
+function S(inner,bg){return '<svg viewBox="0 0 240 240" xmlns="http://www.w3.org/2000/svg">'+(bg||'')+inner+'</svg>';}
+// hybrid seal, parameterized by mode
+function mark(o){o=o||{};const C=o.col||G; let g='';
+  // outer grain ring
+  if(o.grain!==false){const N=o.N||48;for(let k=0;k<N;k++){const a=(k/N)*6.283-1.571;const deg=((a*180/Math.PI)+360)%360;
+    const f=(Math.cos((deg-315)*Math.PI/180)+1)/2;const x=120+78*Math.cos(a),y=120+78*Math.sin(a);
+    g+=`<circle cx="${x.toFixed(1)}" cy="${y.toFixed(1)}" r="${(0.9+1.7*f).toFixed(1)}" fill="${f>0.62?C.bright:f>0.32?C.gold2:C.dim}" opacity="${(0.10+0.85*f).toFixed(2)}"/>`;}}
+  else { // simplified: front arc only (app icon)
+    g+=`<path d="M 96 47 A 78 78 0 0 1 193 96" fill="none" stroke="${C.bright}" stroke-width="5" stroke-linecap="round"/>`;
+  }
+  // face
+  g+=`<rect x="64" y="64" width="112" height="112" rx="16" fill="${o.faceFill||'#16241C'}"/>`;
+  g+=`<path d="M 64 150 L 64 80 Q 64 64 80 64 L 158 64" fill="none" stroke="${C.cream}" stroke-width="2.4" opacity="0.9" stroke-linecap="round"/>`;
+  g+=`<path d="M 176 90 L 176 160 Q 176 176 160 176 L 82 176" fill="none" stroke="${o.darkEdge||'#0A120C'}" stroke-width="2.4" stroke-linecap="round"/>`;
+  // grain mark inside (印心):上扬印记由颗粒显影
+  if(o.grainMark!==false){
+    const pts=[[100,138],[108,132],[116,127],[124,124],[132,122],[140,124],[148,128]]; // upward arc dots
+    pts.forEach((p,i)=>{const f=i/(pts.length-1);const op=(0.35+0.6*f).toFixed(2);
+      g+=`<circle cx="${p[0]}" cy="${p[1]}" r="${(1.4+1.2*f).toFixed(1)}" fill="${f>0.6?C.bright:C.gold2}" opacity="${op}"/>`;});
+    g+=`<circle cx="148" cy="128" r="1.6" fill="${C.cream2}"/>`; // focus
+    // dissolving tail
+    g+=`<circle cx="94" cy="142" r="1.1" fill="${C.gold}" opacity="0.5"/><circle cx="89" cy="146" r="0.8" fill="${C.gold}" opacity="0.3"/>`;
+  } else { // solid mark for mono/small
+    g+=`<path d="M 100 136 Q 120 118 148 126" fill="none" stroke="${C.bright}" stroke-width="3" stroke-linecap="round"/><circle cx="148" cy="126" r="2" fill="${C.cream2}"/>`;
+  }
+  // highlight on face top-left edge already; add corner gleam
+  g+=`<line x1="70" y1="98" x2="70" y2="78" stroke="${C.cream}" stroke-width="2.6" stroke-linecap="round" opacity="0.95"/>`;
+  // 骑缝
+  if(o.kerf!==false){g+=`<path id="${o.id||'a'}" d="M 54 120 A 66 66 0 0 0 186 120" fill="none"/><text font-size="7" letter-spacing="3" fill="${C.gold2}" opacity="0.6" font-family="Inter"><textPath href="#${o.id||'a'}" startOffset="16%">RUNPRINT · 跑印 · 完赛认证</textPath></text>`;}
+  return g;
+}
+function bgDark(){return '<defs><radialGradient id="bd'+(Math.floor(Math.random()*1e6))+'" cx="60%" cy="38%" r="76%"><stop offset="0" stop-color="'+G.base2+'"/><stop offset="1" stop-color="'+G.base+'"/></radialGradient></defs>';}
+// since random ids messy, use static gradients
+const defs='<defs><radialGradient id="bd" cx="60%" cy="38%" r="76%"><stop offset="0" stop-color="'+G.base2+'"/><stop offset="1" stop-color="'+G.base+'"/></radialGradient></defs>';
+function darkBG(){return defs+'<rect x="6" y="6" width="228" height="228" rx="48" fill="url(#bd)"/>';}
+
+document.getElementById('big').innerHTML=S(mark({id:'big'}),darkBG());
+
+// variations
+const monoC={base:'#161616',base2:'#262626',gold:'#777',gold2:'#aaa',gold3:'#ccc',bright:'#fff',cream:'#fff',cream2:'#eee',dim:'#555'};
+const paperC={base:'#F4ECDA',base2:'#FBF6E9',gold:'#9A7636',gold2:'#B68A3E',gold3:'#C2924A',bright:'#7A5C28',cream:'#5a4a28',cream2:'#7A5C28',dim:'#cdbf9c'};
+const vars=[
+ {nm:'App 图标',p:'去颗粒环→暖金前沿弧;去骑缝;印形+压凹+高光,小尺寸可辨',inner:()=>S(mark({id:'v1',grain:false,kerf:false,grainMark:false}),darkBG())},
+ {nm:'单色 / 去色',p:'压凹靠明暗独立成立,传真/水印不垮',inner:()=>S(mark({id:'v2',col:monoC,grainMark:false}),'<rect x="6" y="6" width="228" height="228" rx="48" fill="#161616"/>')},
+ {nm:'去暗底 / 纸白',p:'纸白底+旧金压凹印+压痕,实体烫印场景',inner:()=>S(mark({id:'v3',col:paperC,faceFill:'#F4ECDA',darkEdge:'#cdbf9c'}),'<rect x="6" y="6" width="228" height="228" rx="48" fill="#FBF6E9"/>')},
+ {nm:'段位 · 二级',p:'印心显影层数=段位(亮到第几层)',inner:()=>S(gradeMark(2),darkBG())},
+ {nm:'段位 · 精英',p:'同一外壳,印心全显影=精英级',inner:()=>S(gradeMark(5),darkBG())},
+];
+function gradeMark(level){let g='';
+  // simplified seal shell
+  g+=`<path d="M 96 47 A 78 78 0 0 1 193 96" fill="none" stroke="${G.gold2}" stroke-width="3" opacity="0.4" stroke-linecap="round"/>`;
+  g+=`<rect x="64" y="64" width="112" height="112" rx="16" fill="#16241C"/>`;
+  g+=`<path d="M 64 150 L 64 80 Q 64 64 80 64 L 158 64" fill="none" stroke="${G.cream}" stroke-width="2.2" opacity="0.85" stroke-linecap="round"/>`;
+  // contour layers in 印心, brightness by level
+  for(let i=0;i<5;i++){const baseY=152-i*12;const peakY=baseY-12;const on=i<level;
+    g+=`<path d="M 84 ${baseY} Q 120 ${peakY} 156 ${baseY}" fill="none" stroke="${on?(i>=4?G.bright:G.gold3):'#2a3a2e'}" stroke-width="${on?1.8:1.2}" opacity="${on?(0.5+0.5*i/4):0.3}" stroke-linecap="round"/>`;}
+  return g;
+}
+document.getElementById('vars').innerHTML=vars.map(v=>`<div class="v"><div class="art" style="background:radial-gradient(120% 120% at 62% 38%,#1a2a20,#0c1410)">${v.inner()}</div><div class="cap"><b>${v.nm}</b><p>${v.p}</p></div></div>`).join('');
+</script>
+</body></html>

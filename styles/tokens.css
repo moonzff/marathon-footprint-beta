@@ -1,0 +1,77 @@
+/* ============================================================
+   Runprint 跑印 · 设计系统 Tokens  ·  v1.0 (显影 / Darkroom)
+   Drop into the app and reference via var(--rp-*).
+   两态:暗房黑(身份/峰值) · 纸白(工具/正文)。
+   ============================================================ */
+
+:root {
+  /* ---- Core surfaces (dark / 暗房黑) ---- */
+  --rp-bg:            #0E0F0D; /* 暗房黑 · 主背景(暖向带褐,非纯黑) */
+  --rp-bg-deep:       #0B0C0A; /* 更深 · tab/footer */
+  --rp-card:          #15140F; /* 卡片 */
+  --rp-card-raised:   #1C1810; /* 底片棕黑 · 次级表面 */
+  --rp-green-shadow:  #161C18; /* 显影液墨绿 · 暗角(克制) */
+  --rp-border:        #23211A; /* 描边/分隔 */
+
+  /* ---- Develop gold (主色:显影金) ---- */
+  --rp-gold-dim:      #7A6442; /* 欠曝(未显影) */
+  --rp-gold-deep:     #B68A3E;
+  --rp-gold:          #C99A55; /* 主色 · 旧金哑光(非奖牌亮金、非冷银) */
+  --rp-gold-hi:       #E8C07A; /* 高亮金 */
+  --rp-ivory:         #E8D6A8; /* 暖象牙 · 已定影 · 数据高光 */
+  --rp-fix:           #FBF4E2; /* 定影点(极少量,点睛) */
+
+  /* ---- Accent (rare, <3%) ---- */
+  --rp-ember:         #8C2D1E; /* 安全灯红 · CTA/“定影那一下” */
+
+  /* ---- Light mode (纸白亮态:工具页/正文/打印) ---- */
+  --rp-paper:         #F4ECDA; /* 纸白 */
+  --rp-paper-raised:  #FBF6E9;
+  --rp-ink:           #1A1714; /* 亮态文字墨 */
+
+  /* ---- Text on dark ---- */
+  --rp-text:          #E9E2D2; /* 正文(暖象牙字) */
+  --rp-text-strong:   #F6EEDD; /* 标题 */
+  --rp-text-muted:    #8D8674; /* 次级/标签 */
+  --rp-text-faint:    #6E6A5A; /* 三级 */
+
+  /* ---- Gradients ---- */
+  --rp-grad-gold:     linear-gradient(90deg, #C99A55, #E8C07A);        /* 按钮/PB 章 */
+  --rp-grad-develop:  linear-gradient(90deg, #0E0F0D 0%, #7A6442 40%, #C99A55 64%, #E8D6A8 88%, #FBF4E2 100%); /* 显影曲线/进度 */
+  --rp-grad-card:     radial-gradient(120% 90% at 64% 4%, #1D2A20, #12160F 64%); /* 身份/赛事头卡 */
+
+  /* ---- Type families ---- */
+  --rp-font-serif:    "Noto Serif SC", "Songti SC", "STSong", serif;   /* 现代宋 · 标题/称号/段位 */
+  --rp-font-serif-en: "Playfair Display", Georgia, serif;               /* 英文衬线点缀 */
+  --rp-font-sans:     "Inter", "Noto Sans SC", -apple-system, "PingFang SC", sans-serif; /* 正文/界面 */
+  --rp-font-mono:     "IBM Plex Mono", "SF Mono", ui-monospace, Menlo, monospace;        /* 数据(等宽) */
+
+  /* ---- Radii ---- */
+  --rp-r-chip:   11px;
+  --rp-r-sm:     13px;
+  --rp-r-md:     16px;
+  --rp-r-lg:     20px;
+  --rp-r-phone:  42px;
+
+  /* ---- Spacing scale ---- */
+  --rp-s-1: 4px;  --rp-s-2: 8px;  --rp-s-3: 12px;
+  --rp-s-4: 16px; --rp-s-5: 22px; --rp-s-6: 30px; --rp-s-7: 44px;
+
+  /* ---- Type scale (mobile) ---- */
+  --rp-fz-display: 56px; /* 成绩大字(mono) */
+  --rp-fz-h1:      34px; /* 段位/称号(serif) */
+  --rp-fz-h2:      23px; /* 名字/赛事(serif) */
+  --rp-fz-title:   16px; /* 区块标题(serif) */
+  --rp-fz-body:    14px;
+  --rp-fz-cap:     11px; /* mono 标签/eyebrow */
+  --rp-fz-micro:   10px;
+
+  --rp-shadow-card: 0 40px 80px -40px rgba(31,30,24,0.5);
+}
+
+/* ---- Data numerals: ALWAYS mono + tabular ---- */
+.rp-num { font-family: var(--rp-font-mono); font-variant-numeric: tabular-nums; letter-spacing: 0.5px; }
+
+/* ---- mono eyebrow / label ---- */
+.rp-eyebrow { font-family: var(--rp-font-mono); font-size: var(--rp-fz-cap);
+  letter-spacing: 0.16em; text-transform: uppercase; color: var(--rp-text-muted); }
